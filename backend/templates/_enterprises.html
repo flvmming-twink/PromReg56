@@ -1,0 +1,8 @@
+<section class="section" id="enterprises">
+  <div class="page-title"><div><h2>Предприятия</h2><p>Единый реестр организаций промышленного моногорода и области.</p></div><button class="primary" id="exportCsv">⇩ Экспорт CSV</button></div>
+  <article class="panel">
+    <div class="filters enterprise-filters"><select id="industryFilter"><option value="">Все отрасли</option></select><select id="territoryFilter"><option value="">Все территории</option></select><select id="statusFilter"><option value="">Все статусы</option><option>Действующее</option><option>На реконструкции</option><option>В стадии проекта</option></select><select id="revenueSort"><option value="">Сортировка по выручке</option><option value="revenue_desc">Сначала высокая</option><option value="revenue_asc">Сначала низкая</option></select><div class="search"><span>⌕</span><input id="enterpriseSearch" placeholder="Поиск по названию"></div><button class="reset" id="enterpriseReset">⟳ Сбросить</button></div>
+    <div class="table-scroll large"><table><thead><tr><th>Предприятие</th><th>Отрасль</th><th>Город</th><th>Статус</th><th>Работники</th><th>Выручка, млн ₽</th><th></th></tr></thead><tbody id="enterpriseTable"></tbody></table></div>
+    <div class="table-foot"><span id="enterpriseCount"></span><div class="pagination" id="enterprisePagination"></div></div>
+  </article>
+</section>

@@ -1,0 +1,30 @@
+<section class="section active" id="dashboard">
+  <div class="cards">
+    <article class="stat-card"><div class="stat-icon blue">▦</div><div><span>Всего предприятий</span><strong id="totalCompanies">0</strong></div></article>
+    <article class="stat-card"><div class="stat-icon blue">▥</div><div><span>Отраслей</span><strong id="totalIndustries">0</strong></div></article>
+    <article class="stat-card"><div class="stat-icon green">♧</div><div><span>Работники по последним данным</span><strong id="totalWorkers">0</strong></div></article>
+    <article class="stat-card"><div class="stat-icon purple">▢</div><div><span>Предприятия в стадии проекта</span><strong id="totalProjects">0</strong></div></article>
+  </div>
+
+  <div class="dashboard-grid">
+    <article class="panel chart-panel">
+      <div class="panel-head"><div><h2>Динамика численности рабочих мест</h2><span>человек</span></div></div>
+      <canvas id="jobsChart" height="230"></canvas>
+    </article>
+    <article class="panel donut-panel">
+      <div class="panel-head"><div><h2>Структура предприятий по отраслям</h2><span>% от общего числа</span></div></div>
+      <div class="donut-wrap"><div class="donut"><div><strong id="industryTotal">0</strong><span>предприятий</span></div></div><div class="legend" id="industryLegend"></div></div>
+    </article>
+    <article class="panel map-panel">
+      <div class="panel-head"><div><h2>Карта: Новотроицк и Оренбургская область</h2></div><button class="secondary" data-section="map">Развернуть карту ↗</button></div>
+      <div id="dashboardMap" class="dashboard-map" aria-label="Карта предприятий Оренбургской области"></div>
+    </article>
+  </div>
+
+  <article class="panel enterprise-panel">
+    <div class="panel-head"><div><h2>Предприятия <b class="badge" id="enterpriseBadge">0</b></h2></div><button class="primary" data-section="enterprises">Все предприятия →</button></div>
+    <div class="filters"><select id="dashIndustry"><option value="">Все отрасли</option></select><select id="dashTerritory"><option value="">Все территории</option><option>Новотроицк</option><option>Орск</option><option>Оренбург</option></select><select id="dashStatus"><option value="">Все статусы</option><option>Действующее</option><option>На реконструкции</option><option>В стадии проекта</option></select><div class="search"><span>⌕</span><input id="dashSearch" placeholder="Поиск предприятия по названию"></div><button class="reset" id="resetFilters">⟳ Сбросить фильтры</button></div>
+    <div class="table-scroll"><table><thead><tr><th>Наименование предприятия</th><th>Отрасль</th><th>Город</th><th>Статус</th><th>Численность<br>работников</th><th>Выручка, млн ₽</th><th></th></tr></thead><tbody id="dashboardTable"></tbody></table></div>
+    <div class="table-foot"><span id="shownCount">Показано 0 из 0</span><div class="pagination" id="dashboardPagination"></div></div>
+  </article>
+</section>

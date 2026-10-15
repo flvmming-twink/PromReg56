@@ -1,0 +1,41 @@
+<!-- КАРТА -->
+      <div class="page-pane" id="page-karta">
+        <h1 class="page-title">Карта предприятий и территорий</h1>
+        <p class="page-sub">Интерактивная карта на основе Яндекс.Карт — кликните по маркеру, чтобы увидеть детали</p>
+        <div class="map-side">
+          <div class="map-container">
+            <div id="ymap"></div>
+            <div class="map-layer-toggle">
+              <button data-layer="map" class="active">Схема</button>
+              <button data-layer="sat">Спутник</button>
+              <button data-layer="hybrid">Гибрид</button>
+            </div>
+            <div class="map-legend-block">
+              <div class="row"><span class="dot" style="background:#dc2626;"></span>Крупное предприятие</div>
+              <div class="row"><span class="dot" style="background:#2563eb;"></span>Предприятие</div>
+              <div class="row"><span class="dot" style="background:#16a34a;"></span>Инвестпроект</div>
+            </div>
+          </div>
+          <div class="map-side-filters">
+            <h3>Фильтры карты<button id="mapReset">Сбросить все</button></h3>
+            <div class="filter-group"><label>Город</label><select id="mapCityFilter"><option value="">Все города</option></select></div>
+            <div class="filter-group"><label>Отрасль</label><select id="mapIndFilter"><option value="">Все отрасли</option></select></div>
+            <div class="filter-group"><label>Статус</label><select id="mapStatusFilter"><option value="">Все статусы</option><option>Действующее</option><option>Инвестиционный проект</option></select></div>
+            <div class="filter-group"><label>Поиск</label><input type="text" id="mapSearch" placeholder="Название предприятия..."></div>
+            <button class="btn-primary" id="mapApply" style="justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Применить фильтры</button>
+          </div>
+        </div>
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/></svg></div></div><div class="stat-label">Городов на карте</div><div class="stat-value" id="statCities">0</div><div class="stat-trend up">▲ +1 <span style="color:var(--muted)">к прошлому году</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg></div></div><div class="stat-label">Предприятий</div><div class="stat-value" id="statEnts">0</div><div class="stat-trend up">▲ +1,3% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg></div></div><div class="stat-label">Инвестпроектов</div><div class="stat-value" id="statInv">0</div><div class="stat-trend up">▲ +12,5% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg></div></div><div class="stat-label">Источников данных</div><div class="stat-value">24</div><div class="stat-trend up">▲ +4 <span style="color:var(--muted)">к прошлому году</span></div></div>
+        </section>
+        <div class="table-card">
+          <div class="table-head"><h3>Объекты на карте</h3><div class="table-actions"><span style="font-size:12px;color:var(--muted);">Показано <b id="mapCount">0</b> из <b id="mapTotal">0</b> объектов · клик по строке — перейти к метке</span></div></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Наименование объекта</th><th>Город</th><th>Тип</th><th>Отрасль</th><th>Статус</th><th>На карте</th></tr></thead>
+            <tbody id="mapTbody"></tbody>
+          </table></div>
+        </div>
+      </div>

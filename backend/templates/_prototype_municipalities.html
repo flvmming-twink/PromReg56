@@ -1,0 +1,13 @@
+<!-- МУНИЦИПАЛИТЕТЫ -->
+      <div class="page-pane" id="page-muni">
+        <h1 class="page-title">Муниципалитеты</h1>
+        <p class="page-sub">Города и районы Оренбургской области с показателями промышленного развития</p>
+
+        <section class="filters">
+          <div class="filter-group" style="flex:1.5;"><label>Поиск</label><input type="text" id="muniSearch" placeholder="Название города или района..."></div>
+          <div class="filter-group"><label>Тип территории</label><select id="muniTypeFilter"><option value="">Все</option><option>Город</option><option>Район</option></select></div>
+          <div class="filter-group"><label>Сортировка</label><select id="muniSort"><option value="name">По названию</option><option value="pop">По населению</option><option value="ent">По количеству предприятий</option></select></div>
+        </section>
+
+        <div class="grid-cards" id="muniGrid"></div>
+      </div>

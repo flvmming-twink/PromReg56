@@ -1,0 +1,29 @@
+<!-- ИСТОЧНИКИ -->
+      <div class="page-pane" id="page-istochniki">
+        <h1 class="page-title">Источники данных</h1>
+        <p class="page-sub">Перечень источников, используемых для наполнения системы</p>
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/></svg></div></div><div class="stat-label">Всего источников</div><div class="stat-value" id="srcStatTotal">0</div><div class="stat-trend up">+3 <span style="color:var(--muted)">к прошлому кварталу</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M2.8 12h18.4"/></svg></div></div><div class="stat-label">Официальные сайты</div><div class="stat-value" id="srcStatSites">0</div><div class="stat-trend up">+2 <span style="color:var(--muted)">к прошлому кварталу</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Статистические данные</div><div class="stat-value" id="srcStatStat">0</div><div class="stat-trend up">+1 <span style="color:var(--muted)">к прошлому кварталу</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg></div></div><div class="stat-label">Нормативные документы</div><div class="stat-value" id="srcStatDocs">0</div><div class="stat-trend up">+0 <span style="color:var(--muted)">к прошлому кварталу</span></div></div>
+        </section>
+        <section class="filters">
+          <div class="filter-group"><label>Тип источника</label><select id="srcTypeFilter"><option value="">Все типы</option><option>Нормативный документ</option><option>Официальный сайт</option><option>Отчётность</option></select></div>
+          <div class="filter-group" style="flex:1.5;"><label>Поиск</label><input type="text" id="srcSearch" placeholder="Поиск по названию или URL..."></div>
+          <button class="btn-outline" id="srcReset"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Сбросить</button>
+        </section>
+        <div class="table-card">
+          <div class="table-head">
+            <h3>Найдено источников: <span class="count"><b id="srcFound">0</b></span></h3>
+            <div class="table-actions">
+              <button class="btn-purple admin-only-btn" id="srcAddBtn" style="display:none;" onclick="toast('Открыто создание источника','purple')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Добавить источник</button>
+            </div>
+          </div>
+          <div class="table-scroll"><table class="source-table">
+            <thead><tr><th>Название источника</th><th>Тип</th><th>Ссылка</th><th>Дата публикации</th><th>Дата обращения</th><th>Описание</th><th>Статус</th><th class="admin-only-cell" style="width:80px;">Действия</th></tr></thead>
+            <tbody id="srcTbody"></tbody>
+          </table></div>
+          <div class="table-foot"><div class="per-page"><span>Показать на странице:</span><select id="srcPerPage"><option value="10" selected>10</option><option value="20">20</option></select></div><div class="pager" id="srcPager"></div></div>
+        </div>
+      </div>

@@ -1,0 +1,32 @@
+<!-- ОТЧЕТЫ -->
+      <div class="page-pane" id="page-otchety">
+        <h1 class="page-title">Отчеты</h1>
+        <p class="page-sub">Формирование и экспорт аналитических отчетов</p>
+
+        <div class="table-card" id="reportForm" style="display:none;margin-bottom:18px;">
+          <div class="table-head">
+            <h3>Быстрое создание отчета</h3>
+          </div>
+          <div style="padding:18px;">
+            <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="form-field"><label>Тип отчета</label><select id="repType"><option>Реестр предприятий</option><option>Показатели территорий</option><option>Инвестиционные проекты</option><option>Отраслевой анализ</option></select></div>
+              <div class="form-field"><label>Период</label><select id="repPeriod"><option>2024</option><option>2025</option><option>2021–2025</option></select></div>
+              <div class="form-field"><label>Формат</label><select id="repFormat"><option value="xlsx">Excel (.xlsx)</option></select></div>
+            </div>
+            <div class="form-grid">
+              <div class="form-field full"><label>Комментарий к отчету</label><input type="text" id="repNote" placeholder="Например: для совещания 15.05.2024"></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="btn-primary" id="repCreateBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Сформировать отчет</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-head"><h3>История отчетов</h3><div class="table-actions"><span style="font-size:12.5px;color:var(--muted);" id="reportsCount">0 отчетов</span></div></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th style="width:44px;">№</th><th>Название</th><th>Тип</th><th>Период</th><th>Формат</th><th>Автор</th><th>Создан</th><th>Размер</th><th>Скачать</th><th class="admin-only-cell" style="width:80px;">Действия</th></tr></thead>
+            <tbody id="reportsTbody"></tbody>
+          </table></div>
+        </div>
+      </div>

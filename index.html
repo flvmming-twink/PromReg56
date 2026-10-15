@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Промышленное развитие Оренбургской области</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="prototype.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></div>
+      <div class="brand-text"><b>Промышленное развитие</b><span>Оренбургской области</span></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-page="glavnaya"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.8V21h14V9.8"/></svg><span>Главная</span></button>
+      <button class="nav-item" data-page="predpriyatiya"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg><span>Предприятия</span></button>
+      <button class="nav-item" data-page="pokazateli"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg><span>Показатели</span></button>
+      <button class="nav-item" data-page="karta"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.8"/></svg><span>Карта</span></button>
+      <button class="nav-item" data-page="analitika"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-6"/></svg><span>Аналитика</span></button>
+      <button class="nav-item" data-page="otchety"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg><span>Отчеты</span></button>
+      <button class="nav-item" data-page="otrasli"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>Отрасли</span></button>
+      <button class="nav-item" data-page="muni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V8l5-3v16"/><path d="M10 21V5l6 3v13"/></svg><span>Муниципалитеты</span></button>
+      <button class="nav-item" data-page="istochniki"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Источники</span></button>
+      <button class="nav-item admin-only" data-page="admin"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 9.6 9 10 5.2-.4 9-5 9-10V6Z"/><path d="m9 12 2 2 4-4"/></svg><span>Админ-панель</span><em class="badge">SU</em></button>
+    </nav>
+    <div class="side-bottom">
+      <button class="nav-item" id="settingsBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4Z"/></svg><span>Настройки</span></button>
+      <button class="nav-item" id="logoutBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg><span id="logoutLabel">На главную</span></button>
+    </div>
+  </aside>
+    <main class="main">
+      <header class="topbar">
+      <div class="topbar-title" id="topbarTitle">Комплексная информационная система для консолидации данных и интерактивной визуализации показателей социально-экономического развития промышленного моногорода и области</div>
+      <div class="topbar-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg><input type="text" id="globalSearch" placeholder="Поиск предприятия..."></div>
+      <button class="icon-btn" id="notificationsToggle" type="button" aria-label="Всплывающие уведомления включены" aria-pressed="true" title="Всплывающие уведомления включены"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
+      <div class="user" id="userBlock">
+        <div class="avatar" id="userAvatar">Г</div>
+        <div><span class="user-name" id="userName">Гость</span><span class="user-role" id="userRole">Гостевой доступ</span></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        <div class="user-menu" id="userMenu">
+          <div class="role-info" id="menuRoleInfo">Режим просмотра</div>
+          <div class="sep"></div>
+          <button id="menuLoginBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>Войти как администратор</button>
+          <button id="menuAdminPanelBtn" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 9.6 9 10 5.2-.4 9-5 9-10V6Z"/></svg>Админ-панель</button>
+          <button id="menuExportBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Экспорт данных</button>
+          <button id="menuLogoutBtn" class="danger" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>Выйти</button>
+        </div>
+      </div>
+    </header>
+      <div class="content">
+  <div class="admin-banner" id="adminBanner" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 9.6 9 10 5.2-.4 9-5 9-10V6Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <div>Вы вошли как <b>суперпользователь</b> — доступны редактирование, удаление записей и админ-панель.</div>
+  </div>
+  <!-- ГЛАВНАЯ -->
+      <div class="page-pane active" id="page-glavnaya">
+        <h1 class="page-title">Обзор промышленного комплекса</h1>
+        <p class="page-sub">Сводные показатели развития промышленности Оренбургской области</p>
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg></div></div><div class="stat-label">Всего предприятий</div><div class="stat-value">538</div><div class="stat-trend up">▲ +1,3% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Промышленные</div><div class="stat-value">423</div><div class="stat-trend up">▲ +2,1% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/></svg></div></div><div class="stat-label">Действующие</div><div class="stat-value">512</div><div class="stat-trend up">▲ +1,6% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg></div></div><div class="stat-label">Инвестпроекты</div><div class="stat-value">83</div><div class="stat-trend up">▲ +12,5% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+        </section>
+        <div class="charts-row cols2">
+          <div class="chart-card"><div class="chart-head"><div><div class="chart-title">Динамика ключевых показателей</div><div class="chart-sub">2021–2025</div></div></div><div id="homeChart"></div><div class="chart-legend"><span><i style="background:#2563eb"></i>Выручка</span><span><i style="background:#16a34a"></i>Инвестиции</span><span><i style="background:#a855f7"></i>Численность</span></div></div>
+          <div class="chart-card"><div class="chart-head"><div><div class="chart-title">Структура экономики (2024)</div><div class="chart-sub">Объем 87,6 млрд ₽</div></div></div><div id="pieChart"></div></div>
+        </div>
+      </div>
+      <!-- ПРЕДПРИЯТИЯ -->
+      <div class="page-pane" id="page-predpriyatiya">
+        <div class="breadcrumbs"><span>Предприятия</span><span>/</span><span class="current">Список предприятий</span></div>
+        <h1 class="page-title">Реестр предприятий</h1>
+        <p class="page-sub">Информация о промышленных предприятиях Оренбургской области</p>
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg></div></div><div class="stat-label">Всего предприятий</div><div class="stat-value" id="entStatTotal">0</div><div class="stat-trend up">▲ +1,3% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Промышленные</div><div class="stat-value">423</div><div class="stat-trend up">▲ +2,1% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/></svg></div></div><div class="stat-label">Действующие</div><div class="stat-value" id="entStatActive">0</div><div class="stat-trend up">▲ +1,6% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg></div></div><div class="stat-label">Инвестпроекты</div><div class="stat-value" id="entStatInv">0</div><div class="stat-trend up">▲ +12,5% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+        </section>
+        <section class="filters">
+          <div class="filter-group" style="flex:1.5;"><label>Поиск по предприятию</label><input type="text" id="entSearch" placeholder="Название, ИНН или ключевое слово..."></div>
+          <div class="filter-group"><label>Отрасль</label><select id="entIndFilter"><option value="">Все отрасли</option></select></div>
+          <div class="filter-group"><label>Город</label><select id="entCityFilter"><option value="">Все города</option></select></div>
+          <div class="filter-group"><label>Статус</label><select id="entStatusFilter"><option value="">Все статусы</option><option>Действующее</option><option>Инвестиционный проект</option></select></div>
+          <button class="btn-outline" id="entReset"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Сбросить</button>
+        </section>
+        <div class="table-card">
+          <div class="table-head">
+            <h3>Найдено предприятий: <span class="count"><b id="entFound">0</b></span></h3>
+            <div class="table-actions">
+              <button class="btn-purple admin-only-btn" id="entAddBtn" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Добавить предприятие</button>
+              <button class="btn-outline" onclick="toast('Экспорт в Excel (демо)','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Скачать в Excel</button>
+            </div>
+          </div>
+          <div class="table-scroll"><table>
+            <thead><tr><th style="width:44px;">№</th><th>Наименование предприятия</th><th>Отрасль</th><th>Город</th><th>Статус</th><th>Численность</th><th>Выручка 2024</th><th>Сайт</th><th class="admin-only-cell" style="width:80px;">Действия</th><th style="width:44px;"></th></tr></thead>
+            <tbody id="entTbody"></tbody>
+          </table></div>
+          <div class="table-foot"><div class="per-page"><span>Показать на странице:</span><select id="entPerPage"><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option></select></div><div class="pager" id="entPager"></div></div>
+        </div>
+      </div>
+      <!-- КАРТА -->
+      <div class="page-pane" id="page-karta">
+        <h1 class="page-title">Карта предприятий и территорий</h1>
+        <p class="page-sub">Интерактивная карта на основе Яндекс.Карт — кликните по маркеру, чтобы увидеть детали</p>
+        <div class="map-side">
+          <div class="map-container">
+            <div id="ymap"></div>
+            <div class="map-layer-toggle">
+              <button data-layer="map" class="active">Схема</button>
+              <button data-layer="sat">Спутник</button>
+              <button data-layer="hybrid">Гибрид</button>
+            </div>
+            <div class="map-legend-block">
+              <div class="row"><span class="dot" style="background:#dc2626;"></span>Крупное предприятие</div>
+              <div class="row"><span class="dot" style="background:#2563eb;"></span>Предприятие</div>
+              <div class="row"><span class="dot" style="background:#16a34a;"></span>Инвестпроект</div>
+            </div>
+          </div>
+          <div class="map-side-filters">
+            <h3>Фильтры карты<button id="mapReset">Сбросить все</button></h3>
+            <div class="filter-group"><label>Город</label><select id="mapCityFilter"><option value="">Все города</option></select></div>
+            <div class="filter-group"><label>Отрасль</label><select id="mapIndFilter"><option value="">Все отрасли</option></select></div>
+            <div class="filter-group"><label>Статус</label><select id="mapStatusFilter"><option value="">Все статусы</option><option>Действующее</option><option>Инвестиционный проект</option></select></div>
+            <div class="filter-group"><label>Поиск</label><input type="text" id="mapSearch" placeholder="Название предприятия..."></div>
+            <button class="btn-primary" id="mapApply" style="justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Применить фильтры</button>
+          </div>
+        </div>
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/></svg></div></div><div class="stat-label">Городов на карте</div><div class="stat-value" id="statCities">0</div><div class="stat-trend up">▲ +1 <span style="color:var(--muted)">к прошлому году</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg></div></div><div class="stat-label">Предприятий</div><div class="stat-value" id="statEnts">0</div><div class="stat-trend up">▲ +1,3% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg></div></div><div class="stat-label">Инвестпроектов</div><div class="stat-value" id="statInv">0</div><div class="stat-trend up">▲ +12,5% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg></div></div><div class="stat-label">Источников данных</div><div class="stat-value">24</div><div class="stat-trend up">▲ +4 <span style="color:var(--muted)">к прошлому году</span></div></div>
+        </section>
+        <div class="table-card">
+          <div class="table-head"><h3>Объекты на карте</h3><div class="table-actions"><span style="font-size:12px;color:var(--muted);">Показано <b id="mapCount">0</b> из <b id="mapTotal">0</b> объектов · клик по строке — перейти к метке</span></div></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Наименование объекта</th><th>Город</th><th>Тип</th><th>Отрасль</th><th>Статус</th><th>На карте</th></tr></thead>
+            <tbody id="mapTbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+      <!-- ПОКАЗАТЕЛИ -->
+      <div class="page-pane" id="page-pokazateli">
+        <h1 class="page-title">Социально-экономические показатели</h1>
+        <p class="page-sub">Анализ ключевых показателей развития городов и муниципальных образований Оренбургской области</p>
+        <section class="filters">
+          <div class="filter-group"><label>Территория</label><select id="pokTerritory"><option>Новотроицк</option><option>Орск</option><option>Оренбург</option><option>Бузулук</option><option>Медногорск</option><option>Гай</option></select></div>
+          <div class="filter-group"><label>Год</label><select id="pokYear"><option>2024</option><option>2025</option><option>2023</option></select></div>
+          <div class="filter-group"><label>Показатель</label><select><option>Все показатели</option></select></div>
+          <button class="btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Применить</button>
+          <button class="btn-outline" onclick="switchPage('otchety')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg>Открыть отчёты</button>
+        </section>
+        <section class="stats cols5">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/></svg></div></div><div class="stat-label">Численность населения</div><div class="stat-value">91 985</div><div class="stat-trend up">▲ +0,8%</div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/></svg></div></div><div class="stat-label">Средняя зарплата</div><div class="stat-value">62 430 <small>₽</small></div><div class="stat-trend up">▲ +12,4%</div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Уровень безработицы</div><div class="stat-value">0,9 <small>%</small></div><div class="stat-trend down">▼ −0,3 п.п.</div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/></svg></div></div><div class="stat-label">Инвестиции в ОК</div><div class="stat-value">8,4 <small>млрд ₽</small></div><div class="stat-trend up">▲ +18,7%</div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Объем пром. производства</div><div class="stat-value">87,6 <small>млрд ₽</small></div><div class="stat-trend up">▲ +6,5%</div></div>
+        </section>
+        <div class="charts-row">
+          <div class="chart-card"><div class="chart-head"><div><div class="chart-title">Динамика показателей</div><div class="chart-sub">2021–2025</div></div></div><div id="pokChart1"></div><div class="chart-legend"><span><i style="background:#2563eb"></i>Зарплата</span><span><i style="background:#16a34a"></i>Инвестиции</span><span><i style="background:#a855f7"></i>Пром. производство</span></div></div>
+          <div class="chart-card"><div class="chart-head"><div><div class="chart-title">Структура экономики</div><div class="chart-sub">по отраслям, 2024</div></div></div><div id="pokPie"></div></div>
+          <div class="chart-card"><div class="chart-head"><div><div class="chart-title">Карта показателей</div><div class="chart-sub">по территории области</div></div></div><div id="pokMiniMap" style="height:230px;border-radius:10px;overflow:hidden;"></div></div>
+        </div>
+        <div class="tabs" id="pokTabs">
+          <button class="tab active">Основные показатели</button><button class="tab">Население и занятость</button><button class="tab">Экономика</button><button class="tab">Инвестиции</button><button class="tab">Промышленность</button>
+        </div>
+        <div class="table-card"><div class="table-scroll"><table>
+          <thead><tr><th>Показатель</th><th>Ед.</th><th style="text-align:right;">2021</th><th style="text-align:right;">2022</th><th style="text-align:right;">2023</th><th style="text-align:right;">2024</th><th style="text-align:right;">2025</th><th style="text-align:right;">Δ 2024/2023</th></tr></thead>
+          <tbody>
+            <tr><td>Численность населения</td><td class="cell-muted">чел.</td><td style="text-align:right;">91 164</td><td style="text-align:right;">91 420</td><td style="text-align:right;">91 256</td><td style="text-align:right;"><b>91 985</b></td><td style="text-align:right;">92 430</td><td style="text-align:right;"><span class="stat-trend up" style="justify-content:flex-end;">▲ +0,8%</span></td></tr>
+            <tr><td>Средняя заработная плата</td><td class="cell-muted">₽</td><td style="text-align:right;">42 730</td><td style="text-align:right;">48 210</td><td style="text-align:right;">55 520</td><td style="text-align:right;"><b>62 430</b></td><td style="text-align:right;">67 900</td><td style="text-align:right;"><span class="stat-trend up" style="justify-content:flex-end;">▲ +12,4%</span></td></tr>
+            <tr><td>Уровень безработицы</td><td class="cell-muted">%</td><td style="text-align:right;">1,6</td><td style="text-align:right;">1,3</td><td style="text-align:right;">1,2</td><td style="text-align:right;"><b>0,9</b></td><td style="text-align:right;">0,8</td><td style="text-align:right;"><span class="stat-trend down" style="justify-content:flex-end;">▼ −0,3 п.п.</span></td></tr>
+            <tr><td>Инвестиции в основной капитал</td><td class="cell-muted">млрд ₽</td><td style="text-align:right;">5,1</td><td style="text-align:right;">6,2</td><td style="text-align:right;">7,1</td><td style="text-align:right;"><b>8,4</b></td><td style="text-align:right;">9,8</td><td style="text-align:right;"><span class="stat-trend up" style="justify-content:flex-end;">▲ +18,7%</span></td></tr>
+            <tr><td>Объем промышленного производства</td><td class="cell-muted">млрд ₽</td><td style="text-align:right;">71,4</td><td style="text-align:right;">76,1</td><td style="text-align:right;">82,3</td><td style="text-align:right;"><b>87,6</b></td><td style="text-align:right;">93,2</td><td style="text-align:right;"><span class="stat-trend up" style="justify-content:flex-end;">▲ +6,5%</span></td></tr>
+          </tbody>
+        </table></div></div>
+      </div>
+      <!-- АНАЛИТИКА -->
+      <div class="page-pane" id="page-analitika">
+        <h1 class="page-title">Аналитика промышленного развития</h1>
+        <p class="page-sub">Сводная динамика занятости, выручки и инвестиций по предприятиям и территориям</p>
+
+        <section class="filters analytics-filters">
+          <div class="filter-group">
+            <label for="analyticsCity">Территория</label>
+            <select id="analyticsCity"><option value="">Оренбургская область</option></select>
+          </div>
+          <div class="filter-group">
+            <label for="analyticsPeriod">Период</label>
+            <select id="analyticsPeriod">
+              <option value="2021-2025" selected>2021–2025</option>
+              <option value="2023-2025">2023–2025</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="analyticsMetric">Показатель сравнения</label>
+            <select id="analyticsMetric">
+              <option value="revenue">Выручка</option>
+              <option value="employees">Занятость</option>
+              <option value="investments">Инвестиции</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="analyticsApply" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            Применить
+          </button>
+          <button class="btn-outline" id="analyticsReset" type="button">Сбросить</button>
+          <button class="btn-outline" id="analyticsExport" type="button">Скачать CSV</button>
+        </section>
+        <div class="analytics-notice" id="analyticsNotice" role="status" aria-live="polite" hidden></div>
+
+        <section class="stats analytics-stats">
+          <div class="stat-card">
+            <div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg></div></div>
+            <div class="stat-label">Предприятий в выборке</div><div class="stat-value" id="analyticsCompanyCount">0</div>
+            <div class="stat-trend">по выбранной территории</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/></svg></div></div>
+            <div class="stat-label">Работников</div><div class="stat-value" id="analyticsEmployeeCount">0</div>
+            <div class="stat-trend">человек</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M8.5 10h6a2 2 0 0 1 0 4h-5"/></svg></div></div>
+            <div class="stat-label" id="analyticsMetricLabel">Выручка за период, млрд ₽</div><div class="stat-value" id="analyticsMetricTotal">0</div>
+            <div class="stat-trend" id="analyticsPeriodLabel">2021–2025</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-head"><div class="stat-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 3h6v6"/></svg></div></div>
+            <div class="stat-label">Инвестиционные проекты</div><div class="stat-value" id="analyticsProjectCount">0</div>
+            <div class="stat-trend">в выбранном году</div>
+          </div>
+        </section>
+
+        <div class="charts-row cols2-1 analytics-charts">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div><div class="chart-title" id="analyticsRankingTitle">Топ предприятий по выручке</div><div class="chart-sub" id="analyticsRankingSubtitle">млрд ₽</div></div>
+            </div>
+            <div id="topChart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div><div class="chart-title">Распределение по отраслям</div><div class="chart-sub" id="analyticsIndustrySubtitle">Доля показателя за выбранный период</div></div>
+            </div>
+            <div id="analyticsPie"></div>
+          </div>
+        </div>
+
+        <section class="analytics-lower">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div><div class="chart-title">Динамика показателя</div><div class="chart-sub" id="analyticsTrendSubtitle">За выбранный период</div></div>
+            </div>
+            <div id="analyticsTrend"></div>
+            <div class="chart-legend"><span><i id="analyticsMetricLegend" style="background:#2563eb"></i><span id="analyticsMetricLegendLabel">Выручка</span></span></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div><div class="chart-title">Региональное распределение</div><div class="chart-sub" id="analyticsTerritorySubtitle">По территориям за выбранный период</div></div>
+            </div>
+            <div id="analyticsTerritories"></div>
+          </div>
+        </section>
+
+        <div class="table-card analytics-company-table">
+          <div class="table-head"><h3>Предприятия в выборке: <span class="count"><b id="analyticsCompanyCountLabel">0</b></span></h3></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Предприятие</th><th>Город</th><th>Отрасль</th><th>Работники</th><th>Выручка, млрд ₽</th><th>Инвестиции, млрд ₽</th></tr></thead>
+            <tbody id="analyticsTbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+      <!-- ОТЧЕТЫ -->
+      <div class="page-pane" id="page-otchety">
+        <h1 class="page-title">Отчеты</h1>
+        <p class="page-sub">Формирование и экспорт аналитических отчетов</p>
+
+        <div class="table-card" id="reportForm" style="display:none;margin-bottom:18px;">
+          <div class="table-head">
+            <h3>Быстрое создание отчета</h3>
+          </div>
+          <div style="padding:18px;">
+            <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="form-field"><label>Тип отчета</label><select id="repType"><option>Реестр предприятий</option><option>Показатели территорий</option><option>Инвестиционные проекты</option><option>Отраслевой анализ</option></select></div>
+              <div class="form-field"><label>Период</label><select id="repPeriod"><option>2024</option><option>2025</option><option>2021–2025</option></select></div>
+              <div class="form-field"><label>Формат</label><select id="repFormat"><option value="xlsx">Excel (.xlsx)</option></select></div>
+            </div>
+            <div class="form-grid">
+              <div class="form-field full"><label>Комментарий к отчету</label><input type="text" id="repNote" placeholder="Например: для совещания 15.05.2024"></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="btn-primary" id="repCreateBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Сформировать отчет</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-head"><h3>История отчетов</h3><div class="table-actions"><span style="font-size:12.5px;color:var(--muted);" id="reportsCount">0 отчетов</span></div></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th style="width:44px;">№</th><th>Название</th><th>Тип</th><th>Период</th><th>Формат</th><th>Автор</th><th>Создан</th><th>Размер</th><th>Скачать</th><th class="admin-only-cell" style="width:80px;">Действия</th></tr></thead>
+            <tbody id="reportsTbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+      <!-- ОТРАСЛИ -->
+      <div class="page-pane" id="page-otrasli">
+        <h1 class="page-title">Отрасли промышленности</h1>
+        <p class="page-sub">Анализ отраслевой структуры промышленности Оренбургской области</p>
+
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3"/></svg></div></div><div class="stat-label">Отраслей</div><div class="stat-value">8</div><div class="stat-trend">промышленный комплекс</div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg></div></div><div class="stat-label">Предприятий</div><div class="stat-value">538</div><div class="stat-trend up">▲ +1,3% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Ведущая отрасль</div><div class="stat-value" style="font-size:16px;">Металлургия</div><div class="stat-trend up">48,2% <span style="color:var(--muted)">от объема</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg></div></div><div class="stat-label">Объем производства</div><div class="stat-value">87,6 <small>млрд ₽</small></div><div class="stat-trend up">▲ +6,5% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+        </section>
+
+        <div class="grid-cards" id="industriesGrid"></div>
+
+        <div class="table-card" id="industryDetailsCard" style="display:none;">
+          <div class="table-head"><h3 id="industryDetailsTitle">Предприятия отрасли</h3><div class="table-actions"><span style="font-size:12.5px;color:var(--muted);" id="industryDetailsCount"></span></div></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Предприятие</th><th>Город</th><th>Численность</th><th>Выручка 2024</th><th>Статус</th></tr></thead>
+            <tbody id="industryDetailsTbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+      <!-- МУНИЦИПАЛИТЕТЫ -->
+      <div class="page-pane" id="page-muni">
+        <h1 class="page-title">Муниципалитеты</h1>
+        <p class="page-sub">Города и районы Оренбургской области с показателями промышленного развития</p>
+
+        <section class="filters">
+          <div class="filter-group" style="flex:1.5;"><label>Поиск</label><input type="text" id="muniSearch" placeholder="Название города или района..."></div>
+          <div class="filter-group"><label>Тип территории</label><select id="muniTypeFilter"><option value="">Все</option><option>Город</option><option>Район</option></select></div>
+          <div class="filter-group"><label>Сортировка</label><select id="muniSort"><option value="name">По названию</option><option value="pop">По населению</option><option value="ent">По количеству предприятий</option></select></div>
+        </section>
+
+        <div class="grid-cards" id="muniGrid"></div>
+      </div>
+      <!-- ИСТОЧНИКИ -->
+      <div class="page-pane" id="page-istochniki">
+        <h1 class="page-title">Источники данных</h1>
+        <p class="page-sub">Перечень источников, используемых для наполнения системы</p>
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/></svg></div></div><div class="stat-label">Всего источников</div><div class="stat-value" id="srcStatTotal">0</div><div class="stat-trend up">+3 <span style="color:var(--muted)">к прошлому кварталу</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M2.8 12h18.4"/></svg></div></div><div class="stat-label">Официальные сайты</div><div class="stat-value" id="srcStatSites">0</div><div class="stat-trend up">+2 <span style="color:var(--muted)">к прошлому кварталу</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Статистические данные</div><div class="stat-value" id="srcStatStat">0</div><div class="stat-trend up">+1 <span style="color:var(--muted)">к прошлому кварталу</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg></div></div><div class="stat-label">Нормативные документы</div><div class="stat-value" id="srcStatDocs">0</div><div class="stat-trend up">+0 <span style="color:var(--muted)">к прошлому кварталу</span></div></div>
+        </section>
+        <section class="filters">
+          <div class="filter-group"><label>Тип источника</label><select id="srcTypeFilter"><option value="">Все типы</option><option>Нормативный документ</option><option>Официальный сайт</option><option>Отчётность</option></select></div>
+          <div class="filter-group" style="flex:1.5;"><label>Поиск</label><input type="text" id="srcSearch" placeholder="Поиск по названию или URL..."></div>
+          <button class="btn-outline" id="srcReset"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Сбросить</button>
+        </section>
+        <div class="table-card">
+          <div class="table-head">
+            <h3>Найдено источников: <span class="count"><b id="srcFound">0</b></span></h3>
+            <div class="table-actions">
+              <button class="btn-purple admin-only-btn" id="srcAddBtn" style="display:none;" onclick="toast('Открыто создание источника','purple')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Добавить источник</button>
+            </div>
+          </div>
+          <div class="table-scroll"><table class="source-table">
+            <thead><tr><th>Название источника</th><th>Тип</th><th>Ссылка</th><th>Дата публикации</th><th>Дата обращения</th><th>Описание</th><th>Статус</th><th class="admin-only-cell" style="width:80px;">Действия</th></tr></thead>
+            <tbody id="srcTbody"></tbody>
+          </table></div>
+          <div class="table-foot"><div class="per-page"><span>Показать на странице:</span><select id="srcPerPage"><option value="10" selected>10</option><option value="20">20</option></select></div><div class="pager" id="srcPager"></div></div>
+        </div>
+      </div>
+      <!-- АДМИН-ПАНЕЛЬ -->
+      <div class="page-pane" id="page-admin">
+        <h1 class="page-title">Админ-панель суперпользователя</h1>
+        <p class="page-sub">Управление данными системы, правами и настройками</p>
+
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/></svg></div></div><div class="stat-label">Пользователей</div><div class="stat-value" id="adminUsersCount">0</div><div class="stat-trend up">+2 <span style="color:var(--muted)">за неделю</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg></div></div><div class="stat-label">Записей в БД</div><div class="stat-value" id="adminRecCount">0</div><div class="stat-trend up">+18 <span style="color:var(--muted)">за месяц</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 9.6 9 10 5.2-.4 9-5 9-10V6Z"/></svg></div></div><div class="stat-label">Источников</div><div class="stat-value" id="adminSrcCount">0</div><div class="stat-trend up">+3 <span style="color:var(--muted)">за квартал</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Отчетов</div><div class="stat-value" id="adminRepCount">0</div><div class="stat-trend up">+5 <span style="color:var(--muted)">за неделю</span></div></div>
+        </section>
+
+        <div class="charts-row cols2">
+          <div class="chart-card">
+            <div class="chart-head"><div><div class="chart-title">Журнал аудита</div><div class="chart-sub">Последние действия</div></div></div>
+            <div id="auditList" style="margin-top:8px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head"><div><div class="chart-title">Быстрые действия</div><div class="chart-sub">Суперпользователь</div></div></div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+              <button class="btn-purple" style="justify-content:flex-start;" onclick="openEnterpriseModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Добавить предприятие</button>
+              <button class="btn-outline" style="justify-content:flex-start;" onclick="toast('Экспорт реестра в Excel','success')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Экспорт в Excel</button>
+              <button class="btn-outline" style="justify-content:flex-start;" onclick="toast('Импорт данных из CSV')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 8 5-5 5 5"/><path d="M12 3v12"/></svg>Импорт из CSV</button>
+              <button class="btn-outline" style="justify-content:flex-start;" onclick="toast('Резервная копия создана','success')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 9.6 9 10 5.2-.4 9-5 9-10V6Z"/></svg>Создать резервную копию</button>
+              <button class="btn-outline" style="justify-content:flex-start;" onclick="openUserModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M17 11h4"/><path d="M19 9v4"/></svg>Добавить пользователя</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:18px;">
+          <div class="table-head">
+            <h3>Пользователи системы</h3>
+            <div class="table-actions"><button class="btn-purple" onclick="openUserModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Добавить пользователя</button></div>
+          </div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Пользователь</th><th>Роль</th><th>Последний вход</th><th>Действий</th><th>Статус</th><th style="width:80px;">Действия</th></tr></thead>
+            <tbody id="usersTbody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-head">
+            <h3>Настройки системы</h3>
+          </div>
+          <div style="padding:18px;">
+            <div class="form-grid">
+              <div class="form-field"><label>Название системы</label><input type="text" value="Промышленное развитие Оренбургской области"></div>
+              <div class="form-field"><label>Часовой пояс</label><select><option>Europe/Moscow (UTC+3)</option><option>Europe/Samara (UTC+4)</option></select></div>
+              <div class="form-field"><label>Язык интерфейса</label><select><option>Русский</option><option>English</option></select></div>
+              <div class="form-field"><label>Формат даты</label><select><option>ДД.ММ.ГГГГ</option><option>ГГГГ-ММ-ДД</option></select></div>
+              <div class="form-field full"><label>Email для уведомлений</label><input type="email" value="admin@prom-orenburg.ru"></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+              <button class="btn-purple" onclick="toast('Настройки сохранены','success')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Сохранить</button>
+              <button class="btn-outline" onclick="toast('Изменения отменены')">Отменить</button>
+              <button class="btn-danger" onclick="if(confirm('Сбросить все настройки к значениям по умолчанию?'))toast('Настройки сброшены','success')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Сбросить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+</div>
+    </main>
+  </div>
+  <!-- МОДАЛКА ДЕТАЛЕЙ -->
+<div class="overlay" id="overlay">
+  <div class="modal wide">
+    <div class="modal-head"><div class="modal-title" id="modalTitle"></div><button class="modal-close" id="modalClose">✕</button></div>
+    <div class="modal-body"><div id="modalDetails"></div><div class="modal-desc" id="modalDesc"></div></div>
+  </div>
+</div>
+
+<!-- МОДАЛКА ВХОДА -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Вход для администратора</div><button class="modal-close" id="loginClose">✕</button></div>
+    <div class="modal-body">
+      <div class="login-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 9.6 9 10 5.2-.4 9-5 9-10V6Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <div style="text-align:center;margin-bottom:14px;"><div style="font-size:15px;font-weight:700;margin-bottom:4px;">Суперпользователь</div><div style="font-size:12.5px;color:var(--muted);">Введите учётные данные для получения полного доступа</div></div>
+      <div class="login-form">
+        <div><label>Email или логин</label><input type="text" id="loginUsername" placeholder="admin"></div>
+        <div><label>Пароль</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+        <div class="login-error" id="loginError">Неверный логин или пароль</div>
+        <button class="btn-purple-lg" id="loginSubmit">Войти</button>
+        <button class="btn-outline" id="loginCancel" style="justify-content:center;width:100%;">Отмена</button>
+      </div>
+      <div class="login-hint">Данные администратора по умолчанию: <b>admin</b> / <b>admin123</b><br>Обычные пользователи работают без авторизации в режиме просмотра.</div>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА ПРЕДПРИЯТИЯ -->
+<div class="overlay" id="entModalOverlay">
+  <div class="modal wide">
+    <div class="modal-head"><div class="modal-title" id="entModalTitle">Добавить предприятие</div><button class="modal-close" id="entModalClose">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full"><label>Название <span class="req">*</span></label><input type="text" id="fEntName" placeholder="АО «Пример»"></div>
+        <div class="form-field"><label>ИНН</label><input type="text" id="fEntInn" placeholder="5607019523"></div>
+        <div class="form-field"><label>Отрасль <span class="req">*</span></label><select id="fEntInd"></select></div>
+        <div class="form-field"><label>Город <span class="req">*</span></label><select id="fEntCity"></select></div>
+        <div class="form-field"><label>Статус</label><select id="fEntStatus"><option>Действующее</option><option>Инвестиционный проект</option><option>Ликвидировано</option></select></div>
+        <div class="form-field"><label>Численность</label><input type="number" id="fEntEmp" placeholder="1000"></div>
+        <div class="form-field"><label>Выручка (млрд ₽)</label><input type="number" step="0.1" id="fEntRev" placeholder="10.5"></div>
+        <div class="form-field full"><label>Сайт</label><input type="text" id="fEntSite" placeholder="www.example.ru"></div>
+      </div>
+      <div class="form-error" id="entFormError">Заполните обязательные поля</div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="closeEntModal()">Отмена</button>
+        <button class="btn-purple" id="entSaveBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА ПОЛЬЗОВАТЕЛЯ -->
+<div class="overlay" id="userModalOverlay">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" id="userModalTitle">Добавить пользователя</div><button class="modal-close" id="userModalClose">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full"><label>ФИО <span class="req">*</span></label><input type="text" id="fUserName" placeholder="Иванов Иван Иванович"></div>
+        <div class="form-field full"><label>Email <span class="req">*</span></label><input type="email" id="fUserEmail" placeholder="user@example.ru"></div>
+        <div class="form-field"><label>Роль</label><select id="fUserRole"><option>Администратор</option><option>Редактор</option><option>Просмотр</option></select></div>
+        <div class="form-field"><label>Статус</label><select id="fUserStatus"><option>Активен</option><option>Заблокирован</option></select></div>
+      </div>
+      <div class="form-error" id="userFormError">Заполните обязательные поля</div>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="closeUserModal()">Отмена</button>
+        <button class="btn-purple" id="userSaveBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+  <div class="toasts" id="toasts"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="static-adapter.js"></script>
+  <script src="prototype.js"></script>
+<div style="position:fixed;bottom:10px;left:10px;z-index:9999;background:#0f172a;color:white;padding:7px 12px;border-radius:8px;font:12px Arial;box-shadow:0 2px 12px #0005">Демонстрационная версия · данные и функции сервера ограничены</div>
+</body>
+</html>

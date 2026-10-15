@@ -1,0 +1,33 @@
+<!-- ПРЕДПРИЯТИЯ -->
+      <div class="page-pane" id="page-predpriyatiya">
+        <div class="breadcrumbs"><span>Предприятия</span><span>/</span><span class="current">Список предприятий</span></div>
+        <h1 class="page-title">Реестр предприятий</h1>
+        <p class="page-sub">Информация о промышленных предприятиях Оренбургской области</p>
+        <section class="stats">
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="9" height="18" rx="1"/><path d="M13 9h7v12h-7"/></svg></div></div><div class="stat-label">Всего предприятий</div><div class="stat-value" id="entStatTotal">0</div><div class="stat-trend up">▲ +1,3% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/></svg></div></div><div class="stat-label">Промышленные</div><div class="stat-value">423</div><div class="stat-trend up">▲ +2,1% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/></svg></div></div><div class="stat-label">Действующие</div><div class="stat-value" id="entStatActive">0</div><div class="stat-trend up">▲ +1,6% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+          <div class="stat-card"><div class="stat-head"><div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg></div></div><div class="stat-label">Инвестпроекты</div><div class="stat-value" id="entStatInv">0</div><div class="stat-trend up">▲ +12,5% <span style="color:var(--muted)">к 2023 г.</span></div></div>
+        </section>
+        <section class="filters">
+          <div class="filter-group" style="flex:1.5;"><label>Поиск по предприятию</label><input type="text" id="entSearch" placeholder="Название, ИНН или ключевое слово..."></div>
+          <div class="filter-group"><label>Отрасль</label><select id="entIndFilter"><option value="">Все отрасли</option></select></div>
+          <div class="filter-group"><label>Город</label><select id="entCityFilter"><option value="">Все города</option></select></div>
+          <div class="filter-group"><label>Статус</label><select id="entStatusFilter"><option value="">Все статусы</option><option>Действующее</option><option>Инвестиционный проект</option></select></div>
+          <button class="btn-outline" id="entReset"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Сбросить</button>
+        </section>
+        <div class="table-card">
+          <div class="table-head">
+            <h3>Найдено предприятий: <span class="count"><b id="entFound">0</b></span></h3>
+            <div class="table-actions">
+              <button class="btn-purple admin-only-btn" id="entAddBtn" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Добавить предприятие</button>
+              <button class="btn-outline" onclick="toast('Экспорт в Excel (демо)','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Скачать в Excel</button>
+            </div>
+          </div>
+          <div class="table-scroll"><table>
+            <thead><tr><th style="width:44px;">№</th><th>Наименование предприятия</th><th>Отрасль</th><th>Город</th><th>Статус</th><th>Численность</th><th>Выручка 2024</th><th>Сайт</th><th class="admin-only-cell" style="width:80px;">Действия</th><th style="width:44px;"></th></tr></thead>
+            <tbody id="entTbody"></tbody>
+          </table></div>
+          <div class="table-foot"><div class="per-page"><span>Показать на странице:</span><select id="entPerPage"><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option></select></div><div class="pager" id="entPager"></div></div>
+        </div>
+      </div>

@@ -1,0 +1,50 @@
+<section class="section" id="analytics">
+  <div class="page-title"><div><h2>Аналитика</h2><p>Инструменты для сравнения территорий, отраслей и динамики показателей.</p></div></div>
+  <div class="analytics-layout"><article class="panel"><div class="panel-head"><div><h2>Сравнение отраслей</h2><span>Количество предприятий</span></div></div><div class="bars"><div><span>Металлургия</span><i style="--v:100%"><b>50</b></i></div><div><span>Химическая</span><i style="--v:63%"><b>31</b></i></div><div><span>Машиностроение</span><i style="--v:38%"><b>19</b></i></div><div><span>Стройматериалы</span><i style="--v:26%"><b>13</b></i></div><div><span>Пищевая</span><i style="--v:18%"><b>9</b></i></div></div></article><article class="panel insight"><div class="panel-head"><div><h2>Автоматические выводы</h2></div></div><div class="insight-item"><span>↗</span><div><b>Рост занятости</b><p>Количество рабочих мест увеличилось на 1,5% за последний год.</p></div></div><div class="insight-item"><span>₽</span><div><b>Инвестиционная активность</b><p>Объём инвестиций вырос на 11,4%; основной вклад дают промышленные проекты.</p></div></div><div class="insight-item"><span>!</span><div><b>Зона внимания</b><p>Наблюдается небольшое снижение численности населения.</p></div></div></article></div>
+</section>
+
+<section class="section" id="map">
+  <div class="page-title"><div><h2>Карта предприятий и территорий</h2><p>Интерактивная карта предприятий Оренбургской области.</p></div></div>
+  <div class="map-layout">
+    <article class="panel map-panel-large"><div id="enterpriseMap" class="enterprise-map"></div></article>
+    <aside class="panel map-filters"><div class="panel-head"><h2>Фильтры карты</h2><button class="reset" id="mapReset">⟳ Сбросить</button></div><label>Город<select id="mapCity"><option value="">Все города</option><option>Новотроицк</option><option>Орск</option><option>Оренбург</option></select></label><label>Отрасль<select id="mapIndustry"><option value="">Все отрасли</option></select></label><label>Статус<select id="mapStatus"><option value="">Все статусы</option><option>Действующее</option><option>На реконструкции</option><option>В стадии проекта</option></select></label><label>Поиск<div class="search"><span>⌕</span><input id="mapSearch" placeholder="Предприятие или территория"></div></label><button class="primary" id="applyMapFilters">☷ Применить фильтры</button></aside>
+  </div>
+  <div class="map-stats"><article class="metric"><span>Городов на карте</span><strong id="mapCityCount">0</strong></article><article class="metric"><span>Предприятий</span><strong id="mapEnterpriseCount">0</strong></article><article class="metric"><span>Инвестиционных проектов</span><strong id="mapProjectCount">0</strong></article><article class="metric"><span>Источников данных</span><strong id="mapSourceCount">0</strong></article></div>
+  <article class="panel map-objects"><div class="panel-head"><div><h2>Объекты на карте</h2><span id="mapObjectsCount">0 предприятий</span></div><button class="secondary" id="mapShowAll">Смотреть все →</button></div><div class="table-scroll"><table><thead><tr><th>Название объекта</th><th>Город</th><th>Тип объекта</th><th>Отрасль</th><th>Статус</th><th>Подробнее</th></tr></thead><tbody id="mapObjectsTable"></tbody></table></div></article>
+</section>
+
+<section class="section" id="sources">
+  <div class="page-title"><div><h2>Источники данных</h2><p>Перечень источников, используемых для наполнения системы.</p></div><button class="primary" id="addSource">+ Добавить источник</button></div>
+  <div class="source-stats">
+    <article class="metric source-metric"><span class="source-metric-icon">▤</span><div><span>Всего источников</span><strong id="sourceTotalCount">0</strong><small>В базе данных</small></div></article>
+    <article class="metric source-metric"><span class="source-metric-icon official">◎</span><div><span>Официальные сайты</span><strong id="sourceOfficialCount">0</strong><small>Проверенные организации</small></div></article>
+    <article class="metric source-metric"><span class="source-metric-icon statistics">▥</span><div><span>Статистические данные</span><strong id="sourceStatisticsCount">0</strong><small>Опубликованные показатели</small></div></article>
+    <article class="metric source-metric"><span class="source-metric-icon regulatory">▧</span><div><span>Нормативные документы</span><strong id="sourceRegulatoryCount">0</strong><small>Государственные и муниципальные</small></div></article>
+  </div>
+  <article class="panel source-table-panel">
+    <div class="source-toolbar">
+      <label>Тип источника<select id="sourceTypeFilter"><option value="">Все типы</option></select></label>
+      <label>Город/территория<select id="sourceTerritoryFilter"><option value="">Все территории</option></select></label>
+      <label class="source-search-label">Поиск<div class="search"><span>⌕</span><input id="sourceSearch" placeholder="Поиск по названию или URL..."></div></label>
+      <button class="reset" id="sourceReset">⟳ Сбросить фильтры</button>
+    </div>
+    <div class="source-results-count">Найдено источников: <strong id="sourceFoundCount">0</strong></div>
+    <div class="table-scroll"><table class="source-table"><thead><tr>
+      <th aria-label="Тип"></th>
+      <th><button class="source-sort" data-source-sort="name">Название источника <span>↕</span></button></th>
+      <th><button class="source-sort" data-source-sort="source_type">Тип <span>↕</span></button></th>
+      <th>Ссылка</th>
+      <th><button class="source-sort" data-source-sort="publication_date">Дата публикации <span>↕</span></button></th>
+      <th><button class="source-sort" data-source-sort="access_date">Дата обращения <span>↕</span></button></th>
+      <th>Описание</th>
+      <th>Статус</th>
+      <th aria-label="Действия"></th>
+    </tr></thead><tbody id="sourceTable"></tbody></table></div>
+    <div class="source-pagination"><label>Показывать на странице<select id="sourcePageSize"><option>10</option><option>25</option><option>50</option></select></label><div id="sourcePagination" aria-label="Страницы источников"></div></div>
+  </article>
+</section>
+
+<section class="section" id="about">
+  <div class="page-title"><div><h2>О системе</h2><p>Архитектура и назначение информационной системы.</p></div></div>
+  <article class="panel about"><h3>Назначение</h3><p>ИС предназначена для консолидации статистических, муниципальных и отраслевых данных с последующей интерактивной визуализацией социально-экономического развития Новотроицка и Оренбургской области.</p><h3>Первый этап</h3><div class="architecture"><span>Источники</span><b>→</b><span>Backend / API</span><b>→</b><span>PostgreSQL</span><b>→</b><span>Web-интерфейс</span></div><p class="muted">Данные предприятий, показателей и источников загружаются из PostgreSQL.</p></article>
+</section>

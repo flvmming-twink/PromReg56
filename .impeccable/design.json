@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T22:34:39.4414437+05:00",
+  "title": "Design System: PromRegion56",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Холодная бумага",
+        "canonical": "#f2f4f3",
+        "tonalRamp": ["oklch(15% 0.01 160)", "oklch(27% 0.01 160)", "oklch(39% 0.01 160)", "oklch(51% 0.01 160)", "oklch(63% 0.01 160)", "oklch(75% 0.01 160)", "oklch(87% 0.01 160)", "oklch(95% 0.01 160)"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Белая поверхность",
+        "canonical": "#ffffff",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(27% 0 0)", "oklch(39% 0 0)", "oklch(51% 0 0)", "oklch(63% 0 0)", "oklch(75% 0 0)", "oklch(87% 0 0)", "oklch(95% 0 0)"]
+      },
+      "steel-1": {
+        "role": "neutral",
+        "displayName": "Сталь 1",
+        "canonical": "#e4e8e7",
+        "tonalRamp": ["oklch(15% 0.01 180)", "oklch(27% 0.01 180)", "oklch(39% 0.01 180)", "oklch(51% 0.01 180)", "oklch(63% 0.01 180)", "oklch(75% 0.01 180)", "oklch(87% 0.01 180)", "oklch(95% 0.01 180)"]
+      },
+      "steel-2": {
+        "role": "neutral",
+        "displayName": "Сталь 2",
+        "canonical": "#c5cdcf",
+        "tonalRamp": ["oklch(15% 0.015 210)", "oklch(27% 0.015 210)", "oklch(39% 0.015 210)", "oklch(51% 0.015 210)", "oklch(63% 0.015 210)", "oklch(75% 0.015 210)", "oklch(87% 0.015 210)", "oklch(95% 0.015 210)"]
+      },
+      "steel-3": {
+        "role": "neutral",
+        "displayName": "Сталь 3",
+        "canonical": "#879197",
+        "tonalRamp": ["oklch(15% 0.02 220)", "oklch(27% 0.02 220)", "oklch(39% 0.02 220)", "oklch(51% 0.02 220)", "oklch(63% 0.02 220)", "oklch(75% 0.02 220)", "oklch(87% 0.02 220)", "oklch(95% 0.02 220)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Графит",
+        "canonical": "#151a1d",
+        "tonalRamp": ["oklch(15% 0.015 220)", "oklch(27% 0.015 220)", "oklch(39% 0.015 220)", "oklch(51% 0.015 220)", "oklch(63% 0.015 220)", "oklch(75% 0.015 220)", "oklch(87% 0.015 220)", "oklch(95% 0.015 220)"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Приглушённый графит",
+        "canonical": "#505a60",
+        "tonalRamp": ["oklch(15% 0.02 225)", "oklch(27% 0.02 225)", "oklch(39% 0.02 225)", "oklch(51% 0.02 225)", "oklch(63% 0.02 225)", "oklch(75% 0.02 225)", "oklch(87% 0.02 225)", "oklch(95% 0.02 225)"]
+      },
+      "mineral-blue": {
+        "role": "primary",
+        "displayName": "Минеральный синий",
+        "canonical": "#24469d",
+        "tonalRamp": ["oklch(15% 0.15 265)", "oklch(27% 0.15 265)", "oklch(39% 0.15 265)", "oklch(51% 0.15 265)", "oklch(63% 0.15 265)", "oklch(75% 0.15 265)", "oklch(87% 0.15 265)", "oklch(95% 0.15 265)"]
+      },
+      "mineral-blue-dark": {
+        "role": "primary",
+        "displayName": "Глубокий минеральный синий",
+        "canonical": "#17306f",
+        "tonalRamp": ["oklch(15% 0.13 265)", "oklch(27% 0.13 265)", "oklch(39% 0.13 265)", "oklch(51% 0.13 265)", "oklch(63% 0.13 265)", "oklch(75% 0.13 265)", "oklch(87% 0.13 265)", "oklch(95% 0.13 265)"]
+      },
+      "mineral-blue-soft": {
+        "role": "primary",
+        "displayName": "Разреженный минеральный синий",
+        "canonical": "#dfe7fb",
+        "tonalRamp": ["oklch(15% 0.04 265)", "oklch(27% 0.04 265)", "oklch(39% 0.04 265)", "oklch(51% 0.04 265)", "oklch(63% 0.04 265)", "oklch(75% 0.04 265)", "oklch(87% 0.04 265)", "oklch(95% 0.04 265)"]
+      },
+      "signal-orange": {
+        "role": "secondary",
+        "displayName": "Сигнальный оранжевый",
+        "canonical": "#bd390e",
+        "tonalRamp": ["oklch(15% 0.18 40)", "oklch(27% 0.18 40)", "oklch(39% 0.18 40)", "oklch(51% 0.18 40)", "oklch(63% 0.18 40)", "oklch(75% 0.18 40)", "oklch(87% 0.18 40)", "oklch(95% 0.18 40)"]
+      },
+      "signal-orange-dark": {
+        "role": "secondary",
+        "displayName": "Тёмный сигнальный оранжевый",
+        "canonical": "#8f2908",
+        "tonalRamp": ["oklch(15% 0.16 40)", "oklch(27% 0.16 40)", "oklch(39% 0.16 40)", "oklch(51% 0.16 40)", "oklch(63% 0.16 40)", "oklch(75% 0.16 40)", "oklch(87% 0.16 40)", "oklch(95% 0.16 40)"]
+      },
+      "focus-blue": {
+        "role": "primary",
+        "displayName": "Фокусный синий",
+        "canonical": "#0b65d8",
+        "tonalRamp": ["oklch(15% 0.18 255)", "oklch(27% 0.18 255)", "oklch(39% 0.18 255)", "oklch(51% 0.18 255)", "oklch(63% 0.18 255)", "oklch(75% 0.18 255)", "oklch(87% 0.18 255)", "oklch(95% 0.18 255)"]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Аварийный красный",
+        "canonical": "#a52b2b",
+        "tonalRamp": ["oklch(15% 0.15 25)", "oklch(27% 0.15 25)", "oklch(39% 0.15 25)", "oklch(51% 0.15 25)", "oklch(63% 0.15 25)", "oklch(75% 0.15 25)", "oklch(87% 0.15 25)", "oklch(95% 0.15 25)"]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Рабочий зелёный",
+        "canonical": "#176b49",
+        "tonalRamp": ["oklch(15% 0.11 155)", "oklch(27% 0.11 155)", "oklch(39% 0.11 155)", "oklch(51% 0.11 155)", "oklch(63% 0.11 155)", "oklch(75% 0.11 155)", "oklch(87% 0.11 155)", "oklch(95% 0.11 155)"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Маркировочный дисплей",
+        "purpose": "Главные заголовки разделов и название открытого паспорта."
+      },
+      "headline": {
+        "displayName": "Заголовок пластины",
+        "purpose": "Названия крупных рабочих секций."
+      },
+      "title": {
+        "displayName": "Локальный заголовок",
+        "purpose": "Внутренние секции, отрасли и группы."
+      },
+      "body": {
+        "displayName": "Рабочий текст",
+        "purpose": "Основной интерфейсный текст, значения и контролы."
+      },
+      "label": {
+        "displayName": "Служебная метка",
+        "purpose": "Подписи полей, заголовки таблиц, коды и метаданные."
+      }
+    },
+    "shadows": [
+      {
+        "name": "drawer-structural",
+        "value": "-14px 18px 38px rgb(21 26 29 / 0.22)",
+        "purpose": "Отделяет открытый паспорт предприятия от затемнённого рабочего поля."
+      },
+      {
+        "name": "map-marker-lift",
+        "value": "2px 3px 7px rgb(21 26 29 / 0.3)",
+        "purpose": "Удерживает координатную точку над линиями карты."
+      }
+    ],
+    "motion": [
+      {
+        "name": "passport-slide",
+        "value": "transform 420ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Единственный механический жест системы; отключается при prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "workspace-stack",
+        "value": "1180px"
+      },
+      {
+        "name": "compact-layout",
+        "value": "820px"
+      },
+      {
+        "name": "single-column",
+        "value": "620px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Главное действие в поиске или шапке рабочего раздела.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Найти</button>",
+      "css": ".ds-btn-primary { min-height: 44px; padding: 11px 18px; border: 1px solid var(--action, #bd390e); border-radius: 5px; background: var(--action, #bd390e); color: #fff; font-family: \"Fira Sans\", sans-serif; font-size: 16px; font-weight: 600; transition: background 160ms ease, border-color 160ms ease; } .ds-btn-primary:hover { border-color: var(--action-dark, #8f2908); background: var(--action-dark, #8f2908); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 3px solid var(--focus, #0b65d8); outline-offset: 3px; }"
+    },
+    {
+      "name": "Quiet Action",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Сброс фильтра или другое вторичное действие без цветовой заливки.",
+      "html": "<button class=\"ds-btn-quiet\" type=\"button\">Сбросить</button>",
+      "css": ".ds-btn-quiet { min-height: 42px; padding: 9px 14px; border: 1px solid var(--steel-3, #879197); border-radius: 5px; background: transparent; color: var(--ink, #151a1d); font-family: \"Fira Sans\", sans-serif; font-size: 16px; font-weight: 500; } .ds-btn-quiet:hover { border-color: var(--ink, #151a1d); background: var(--steel-1, #e4e8e7); } .ds-btn-quiet:active { background: var(--steel-2, #c5cdcf); } .ds-btn-quiet:focus-visible { outline: 3px solid var(--focus, #0b65d8); outline-offset: 3px; }"
+    },
+    {
+      "name": "Registry Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Подписанное поле фильтра с компактной стальной рамкой.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Территория</span><select class=\"ds-field-control\"><option>Все территории</option></select></label>",
+      "css": ".ds-field { display: grid; gap: 7px; color: var(--ink, #151a1d); font-family: \"Fira Sans\", sans-serif; } .ds-field-label { color: var(--muted, #505a60); font-size: 12px; font-weight: 600; } .ds-field-control { width: 100%; min-height: 42px; padding: 9px 34px 9px 11px; border: 1px solid var(--steel-3, #879197); border-radius: 5px; background: var(--surface, #fff); color: var(--ink, #151a1d); font: inherit; } .ds-field-control:hover { border-color: var(--ink, #151a1d); } .ds-field-control:focus-visible { outline: 3px solid var(--focus, #0b65d8); outline-offset: 3px; } .ds-field-control:disabled { cursor: not-allowed; opacity: 0.5; }"
+    },
+    {
+      "name": "Section Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Активный режим в липкой горизонтальной ленте разделов.",
+      "html": "<button class=\"ds-section-link ds-is-active\" type=\"button\" aria-current=\"page\"><svg class=\"ds-section-icon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3 19V9l9-6 9 6v10H3Z\"/><path d=\"M8 19v-6h8v6\"/></svg>Обзор</button>",
+      "css": ".ds-section-link { min-width: max-content; display: inline-flex; align-items: center; gap: 9px; padding: 13px 18px 10px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--muted, #505a60); font-family: \"Fira Sans\", sans-serif; font-size: 14px; font-weight: 500; } .ds-section-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: square; stroke-linejoin: miter; } .ds-section-link:hover { background: var(--steel-1, #e4e8e7); color: var(--ink, #151a1d); } .ds-section-link.ds-is-active { border-bottom-color: var(--action, #bd390e); color: var(--ink, #151a1d); font-weight: 600; } .ds-section-link:focus-visible { outline: 3px solid var(--focus, #0b65d8); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ruled Index Row",
+      "kind": "custom",
+      "refersTo": "ruled-surface",
+      "description": "Кликабельная строка территориального индекса с кодом, названием и числом.",
+      "html": "<button class=\"ds-index-row\" type=\"button\"><span class=\"ds-index-code\">Т-03</span><strong class=\"ds-index-name\">Оренбург</strong><span class=\"ds-index-count\">24</span></button>",
+      "css": ".ds-index-row { width: 100%; display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 13px 18px; border: 0; border-bottom: 1px solid var(--steel-1, #e4e8e7); background: var(--surface, #fff); color: var(--ink, #151a1d); font-family: \"Fira Sans\", sans-serif; text-align: left; } .ds-index-code { color: var(--blue-dark, #17306f); font-family: \"Fira Sans Condensed\", sans-serif; font-size: 13px; font-variant-numeric: tabular-nums; } .ds-index-name { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; } .ds-index-count { color: var(--muted, #505a60); font-variant-numeric: tabular-nums; } .ds-index-row:hover, .ds-index-row:active { background: var(--blue-soft, #dfe7fb); } .ds-index-row:focus-visible { outline: 3px solid var(--focus, #0b65d8); outline-offset: -3px; }"
+    },
+    {
+      "name": "Certification Plate",
+      "kind": "card",
+      "refersTo": "ruled-surface",
+      "description": "Общая рамка для связанных данных со срезанным верхним правым углом.",
+      "html": "<section class=\"ds-plate\"><header class=\"ds-plate-head\"><div><h2 class=\"ds-plate-title\">Предприятия на карте</h2><p class=\"ds-plate-note\">106 объектов с координатами</p></div></header><div class=\"ds-plate-body\">Рабочее содержимое</div></section>",
+      "css": ".ds-plate { overflow: hidden; border: 1px solid var(--ink, #151a1d); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); background: var(--surface, #fff); color: var(--ink, #151a1d); font-family: \"Fira Sans\", sans-serif; } .ds-plate-head { min-height: 92px; display: flex; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--steel-2, #c5cdcf); } .ds-plate-title { margin: 0 0 6px; font-family: \"Fira Sans Condensed\", sans-serif; font-size: 28px; line-height: 1.05; letter-spacing: -0.02em; } .ds-plate-note { margin: 0; color: var(--muted, #505a60); font-size: 13px; } .ds-plate-body { min-height: 150px; padding: 20px; background: #e8eeec; color: var(--muted, #505a60); } .ds-plate:focus-within { outline: 3px solid var(--focus, #0b65d8); outline-offset: 3px; }"
+    },
+    {
+      "name": "Status Label",
+      "kind": "chip",
+      "refersTo": "ruled-surface",
+      "description": "Текстовый статус с дополнительной цветовой точкой; цвет никогда не работает один.",
+      "html": "<span class=\"ds-status ds-status-active\"><i class=\"ds-status-dot\" aria-hidden=\"true\"></i>Действующее</span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 7px; color: var(--muted, #505a60); font-family: \"Fira Sans\", sans-serif; font-size: 12px; } .ds-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--steel-3, #879197); } .ds-status-active .ds-status-dot { background: var(--success, #176b49); } .ds-status:hover { color: var(--ink, #151a1d); } .ds-status:focus-visible { outline: 3px solid var(--focus, #0b65d8); outline-offset: 3px; }"
+    },
+    {
+      "name": "Enterprise Passport",
+      "kind": "custom",
+      "refersTo": "ruled-surface",
+      "description": "Фирменный выезжающий слой с кодом предприятия и линованными полями.",
+      "html": "<aside class=\"ds-passport ds-is-open\" aria-label=\"Паспорт предприятия\"><header class=\"ds-passport-bar\"><span>Паспорт П-0003</span><button class=\"ds-passport-close\" type=\"button\" aria-label=\"Закрыть паспорт\">×</button></header><div class=\"ds-passport-body\"><h2 class=\"ds-passport-title\">Предприятие</h2><dl class=\"ds-passport-fields\"><div class=\"ds-passport-field\"><dt>Территория</dt><dd>Оренбург</dd></div><div class=\"ds-passport-field\"><dt>Отрасль</dt><dd>Машиностроение</dd></div></dl></div></aside>",
+      "css": ".ds-passport { width: min(640px, 94vw); background: var(--surface, #fff); color: var(--ink, #151a1d); box-shadow: -14px 18px 38px rgb(21 26 29 / 0.22); font-family: \"Fira Sans\", sans-serif; transform: translateX(104%); transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-passport.ds-is-open { transform: translateX(0); } .ds-passport-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--ink, #151a1d); background: var(--blue, #24469d); color: #fff; font-size: 12px; font-weight: 600; } .ds-passport-close { width: 40px; height: 40px; border: 1px solid currentColor; border-radius: 4px; background: transparent; color: inherit; font-size: 22px; } .ds-passport-close:hover { background: rgb(255 255 255 / 0.16); } .ds-passport-close:focus-visible { outline: 3px solid #fff; outline-offset: 3px; } .ds-passport-body { padding: 30px; } .ds-passport-title { max-width: 16ch; margin: 0 0 30px; font-family: \"Fira Sans Condensed\", sans-serif; font-size: clamp(2.2rem, 6vw, 4rem); line-height: 0.96; letter-spacing: -0.035em; } .ds-passport-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--ink, #151a1d); border-left: 1px solid var(--steel-2, #c5cdcf); } .ds-passport-field { min-height: 84px; padding: 13px 14px; border-right: 1px solid var(--steel-2, #c5cdcf); border-bottom: 1px solid var(--steel-2, #c5cdcf); } .ds-passport-field dt { margin-bottom: 7px; color: var(--muted, #505a60); font-size: 12px; font-weight: 600; } .ds-passport-field dd { margin: 0; font-size: 14px; } @media (max-width: 620px) { .ds-passport { width: 100%; } .ds-passport-body { padding: 26px 18px; } .ds-passport-fields { grid-template-columns: 1fr; } } @media (prefers-reduced-motion: reduce) { .ds-passport { transition: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Живой заводской паспорт",
+    "overview": "PromRegion56 выглядит как рабочая идентификационная табличка, превращённая в живой реестр: холодная бумажная плоскость, строгие линейки, крупные идентификаторы и компактные пары «метка — значение». Визуальная система не изображает промышленность декоративно; она даёт данным порядок, координаты и проверяемое происхождение.\n\nИнтерфейс плотный, но не тесный. Сильная типографическая иерархия ведёт от ответа к деталям, а большие поля группируются не карточками, а общими рамками и последовательными строками. Минеральный синий принадлежит данным и навигационным связям; сигнальный оранжевый отмечает действие и особо важную точку. Поверхности в основном плоские — глубина появляется только там, где объект физически выходит поверх рабочего поля.\n\nСистема обязана оставаться честным статическим каталогом: никакой декоративной аналитики, синтетических трендов или значений-заглушек. Отсутствующие сведения называются прямо, источник остаётся рядом с данными, а каждый интерактивный элемент должен выполнять реальную функцию.",
+    "keyCharacteristics": [
+      "Холодная бумажная основа и белые рабочие поверхности.",
+      "Графитовые и стальные линейки вместо сетки одинаковых карточек.",
+      "Узкая акцидентная типографика для названий, чисел и идентификаторов.",
+      "Минеральный синий для данных; сигнальный оранжевый для действий и крупных точек.",
+      "Квадратная геометрия с редкими компактными скруглениями и срезанным углом таблички.",
+      "Один короткий механический жест — выезд паспорта предприятия."
+    ],
+    "rules": [
+      {
+        "name": "The Signal-Only Rule",
+        "body": "Сигнальный оранжевый не заполняет декоративные поверхности: он означает действие, активную границу или особый статус точки.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ruled Contrast Rule",
+        "body": "Внешняя рамка и главная линия используют графит; внутренние деления ослабляются до стали, чтобы структура читалась без визуального шума.",
+        "section": "colors"
+      },
+      {
+        "name": "The Condensed Authority Rule",
+        "body": "Fira Sans Condensed используется только там, где нужен идентификатор, счётчик или сильный заголовок; длинные сведения остаются в Fira Sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Numeric Register Rule",
+        "body": "Любые сравниваемые числа, коды, даты и финансовые значения набираются табличными цифрами и выравниваются по общей логике колонки.",
+        "section": "typography"
+      },
+      {
+        "name": "The Shared Plate Rule",
+        "body": "Связанные данные объединяются одной рамкой и внутренними линейками; отдельная карточка допустима только для самостоятельного слоя или сообщения.",
+        "section": "layout"
+      },
+      {
+        "name": "The Answer-First Rule",
+        "body": "На каждом масштабе сначала остаются название, число или действие; пояснение и вторичная метаинформация могут переноситься или скрываться позже.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-by-Default Rule",
+        "body": "Статические поверхности не получают тень; физическая глубина появляется только у выдвинутого слоя и точек поверх карты.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One-Cut Rule",
+        "body": "Срезанный угол — подпись большой идентификационной пластины или знака, а не украшение каждой строки и кнопки.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do объединять связанные сведения общей пластиной и тонкими линейками вместо россыпи одинаковых карточек.",
+      "Do сохранять сигнальный оранжевый для главного действия, активной линии и подтверждённо важной точки.",
+      "Do показывать источник, статус отсутствующего значения и реальный результат фильтрации рядом с данными.",
+      "Do поддерживать клавиатуру, заметный `:focus-visible`, skip-link, возврат фокуса из паспорта и `prefers-reduced-motion`.",
+      "Do проверять три перелома компоновки: 1180px, 820px и 620px, включая горизонтальную прокрутку таблиц и ленты разделов."
+    ],
+    "donts": [
+      "Don't превращать реестр в витрину KPI-карточек, мягких градиентов или декоративных графиков.",
+      "Don't использовать тени для обычных секций, строк и фильтров; глубина зарезервирована за выдвинутым паспортом и точками карты.",
+      "Don't заполнять отсутствие данных демонстрационными цифрами, рейтингами, трендами или неподтверждёнными статусами.",
+      "Don't добавлять оранжевый как общий брендовый фон или синий как декоративную заливку больших площадей.",
+      "Don't скрывать важное действие только в иконке без текстовой подписи или доступного имени."
+    ]
+  }
+}

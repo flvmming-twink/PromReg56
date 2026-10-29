@@ -29,6 +29,7 @@
     enterprisePage: 1,
     sourcePage: 1,
     selectedEnterprise: null,
+    modalType: null,
     lastFocus: null
   };
 
@@ -56,6 +57,9 @@
   const territoryMetricsByCity = groupBy(data.territory_metrics, "city_id");
   const enterprisesByCity = groupBy(data.enterprises, "city_id");
   const enterprisesByIndustry = groupBy(data.enterprises, "industry_id");
+  let enterpriseMap = null;
+  let mapMarkersLayer = null;
+  const mapMarkersByEnterprise = new Map();
 
   const sourceUsage = new Map(data.data_sources.map((item) => [item.id, new Set()]));
   data.enterprise_sources.forEach((item) => sourceUsage.get(item.source_id)?.add(item.enterprise_id));
@@ -128,6 +132,26 @@
     return "neutral";
   };
 
+  const pluralize = (value, one, few, many) => {
+    const number = Math.abs(Number(value));
+    const last = number % 10;
+    const lastTwo = number % 100;
+    if (last === 1 && lastTwo !== 11) return one;
+    if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return few;
+    return many;
+  };
+
+  const ENTERPRISE_METRIC_CATALOG = [
+    { key: "employees", title: "Сотрудники", format: (value) => formatNumber(value, " чел.") },
+    { key: "revenue", title: "Выручка", format: formatMoney },
+    { key: "net_profit", title: "Чистая прибыль", format: formatMoney },
+    { key: "average_salary", title: "Средняя зарплата", format: formatMoney },
+    { key: "assets", title: "Активы", format: formatMoney },
+    { key: "investments", title: "Инвестиции", format: formatMoney },
+    { key: "taxes_paid", title: "Налоги", format: formatMoney },
+    { key: "production_volume", title: "Объём производства", format: (value) => formatNumber(value) }
+  ];
+
   function populateSelect(select, items, valueKey, labelKey) {
     const fragment = document.createDocumentFragment();
     items.forEach((item) => {
@@ -185,31 +209,19 @@
 
   function enterprisePoint(enterprise) {
     const city = citiesById.get(enterprise.city_id);
-    const latitude = enterprise.latitude ?? city?.latitude;
-    const longitude = enterprise.longitude ?? city?.longitude;
+    const exact = enterprise.latitude !== null && enterprise.latitude !== undefined
+      && enterprise.longitude !== null && enterprise.longitude !== undefined;
+    let latitude = enterprise.latitude ?? city?.latitude;
+    let longitude = enterprise.longitude ?? city?.longitude;
     if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) return null;
-    return { enterprise, latitude, longitude };
+    if (!exact) {
+      latitude += Math.sin(enterprise.id * 7.13) * 0.035;
+      longitude += Math.cos(enterprise.id * 5.71) * 0.055;
+    }
+    return { enterprise, latitude, longitude, approximate: !exact };
   }
 
   const allPoints = data.enterprises.map(enterprisePoint).filter(Boolean);
-  const mapBounds = {
-    minLat: Math.min(...allPoints.map((item) => item.latitude)),
-    maxLat: Math.max(...allPoints.map((item) => item.latitude)),
-    minLon: Math.min(...allPoints.map((item) => item.longitude)),
-    maxLon: Math.max(...allPoints.map((item) => item.longitude))
-  };
-
-  function pointPosition(point) {
-    const x = ((point.longitude - mapBounds.minLon) / (mapBounds.maxLon - mapBounds.minLon || 1)) * 88 + 6;
-    const y = ((mapBounds.maxLat - point.latitude) / (mapBounds.maxLat - mapBounds.minLat || 1)) * 84 + 8;
-    const fallback = point.enterprise.latitude === null || point.enterprise.longitude === null;
-    const jitterX = fallback ? Math.sin(point.enterprise.id * 7.13) * 1.8 : 0;
-    const jitterY = fallback ? Math.cos(point.enterprise.id * 5.71) * 1.8 : 0;
-    return {
-      left: Math.max(2, Math.min(98, x + jitterX)),
-      top: Math.max(2, Math.min(98, y + jitterY))
-    };
-  }
 
   function getMapEnterprises() {
     return allPoints.filter(({ enterprise }) => {
@@ -219,30 +231,100 @@
     });
   }
 
-  function renderMap() {
-    const container = byId("mapPoints");
+  function mapPopupMarkup(point) {
+    const { enterprise, approximate } = point;
+    return `
+      <div class="map-popup">
+        <strong>${escapeHtml(enterpriseLabel(enterprise))}</strong>
+        <span>${escapeHtml(cityName(enterprise.city_id))} · ${escapeHtml(industryName(enterprise.industry_id))}</span>
+        <small>${approximate ? "Положение указано приблизительно" : "Координаты предприятия"}</small>
+        <button class="map-popup-action" type="button" data-map-open-enterprise="${enterprise.id}">Открыть карточку</button>
+      </div>
+    `;
+  }
+
+  function initEnterpriseMap() {
+    const container = byId("enterpriseMap");
+    if (!window.L) {
+      container.classList.add("map-unavailable");
+      container.insertAdjacentHTML("beforeend", '<p class="map-load-error">Карта не загрузилась. Реестр и фильтры продолжают работать.</p>');
+      byId("mapStatus").textContent = "Картографический слой недоступен";
+      return;
+    }
+
+    enterpriseMap = window.L.map(container, {
+      zoomControl: true,
+      scrollWheelZoom: false,
+      attributionControl: true
+    }).setView([51.77, 56.47], 7);
+    window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      minZoom: 4,
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(enterpriseMap);
+    mapMarkersLayer = window.L.layerGroup().addTo(enterpriseMap);
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(() => enterpriseMap.invalidateSize({ animate: false })).observe(container);
+    }
+  }
+
+  function markerStyle(enterprise, selected = false) {
+    const major = enterprise.is_major_enterprise || enterprise.is_city_forming;
+    return {
+      radius: selected ? (major ? 10 : 8) : (major ? 8 : 6),
+      color: selected ? "#151a1d" : "#ffffff",
+      weight: selected ? 3 : 2,
+      fillColor: major ? "#bd390e" : "#24469d",
+      fillOpacity: 0.96
+    };
+  }
+
+  function updateSelectedMapMarker() {
+    mapMarkersByEnterprise.forEach((marker, enterpriseId) => {
+      const enterprise = enterprisesById.get(enterpriseId);
+      marker.setStyle(markerStyle(enterprise, state.selectedEnterprise === enterpriseId));
+      if (state.selectedEnterprise === enterpriseId) marker.bringToFront();
+    });
+  }
+
+  function renderMap(options = {}) {
     const points = getMapEnterprises();
-    container.replaceChildren();
     byId("mapEmpty").hidden = points.length > 0;
 
-    const fragment = document.createDocumentFragment();
-    points
-      .sort((a, b) => Number(a.enterprise.is_major_enterprise || a.enterprise.is_city_forming) - Number(b.enterprise.is_major_enterprise || b.enterprise.is_city_forming))
-      .forEach((point) => {
-        const button = document.createElement("button");
-        const position = pointPosition(point);
-        const major = point.enterprise.is_major_enterprise || point.enterprise.is_city_forming;
-        button.type = "button";
-        button.className = `map-point${major ? " is-major" : ""}${state.selectedEnterprise === point.enterprise.id ? " is-selected" : ""}`;
-        button.style.left = `${position.left}%`;
-        button.style.top = `${position.top}%`;
-        button.dataset.label = `${enterpriseLabel(point.enterprise)} · ${cityName(point.enterprise.city_id)}`;
-        button.dataset.enterpriseId = point.enterprise.id;
-        button.setAttribute("aria-label", `Открыть ${enterpriseLabel(point.enterprise)}, ${cityName(point.enterprise.city_id)}`);
-        button.addEventListener("click", () => openPassport(point.enterprise.id, button));
-        fragment.append(button);
+    if (mapMarkersLayer) {
+      mapMarkersLayer.clearLayers();
+      mapMarkersByEnterprise.clear();
+      points.forEach((point) => {
+        const marker = window.L.circleMarker(
+          [point.latitude, point.longitude],
+          markerStyle(point.enterprise, state.selectedEnterprise === point.enterprise.id)
+        );
+        marker.bindTooltip(`${enterpriseLabel(point.enterprise)} · ${cityName(point.enterprise.city_id)}`, {
+          direction: "top",
+          offset: [0, -8]
+        });
+        marker.bindPopup(mapPopupMarkup(point), { minWidth: 220, maxWidth: 280 });
+        marker.addTo(mapMarkersLayer);
+        const markerElement = marker.getElement();
+        if (markerElement) {
+          markerElement.setAttribute("role", "button");
+          markerElement.setAttribute("tabindex", "0");
+          markerElement.setAttribute("aria-label", `Показать ${enterpriseLabel(point.enterprise)}, ${cityName(point.enterprise.city_id)}`);
+          markerElement.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              marker.openPopup();
+            }
+          });
+        }
+        mapMarkersByEnterprise.set(point.enterprise.id, marker);
       });
-    container.append(fragment);
+
+      if (points.length && options.preserveView !== true) {
+        const bounds = window.L.latLngBounds(points.map((point) => [point.latitude, point.longitude]));
+        enterpriseMap.fitBounds(bounds, { padding: [28, 28], maxZoom: 10, animate: false });
+      }
+    }
 
     const parts = [];
     if (state.mapCity) parts.push(cityName(Number(state.mapCity)));
@@ -250,6 +332,110 @@
     byId("mapStatus").textContent = parts.length
       ? `${points.length} объектов · ${parts.join(" · ")}`
       : `${points.length} объектов с координатами`;
+  }
+
+  function lineChartMarkup(points, options) {
+    const values = points
+      .filter((point) => point.value !== null && point.value !== undefined && Number.isFinite(Number(point.value)))
+      .map((point) => ({ ...point, value: Number(point.value) }))
+      .sort((a, b) => a.year - b.year);
+    if (!values.length) {
+      return '<div class="chart-empty"><strong>Нет годового ряда</strong><span>В базе нет значений для этого показателя.</span></div>';
+    }
+
+    const width = 700;
+    const height = 238;
+    const padding = { top: 20, right: 18, bottom: 42, left: 64 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+    const rawMin = Math.min(...values.map((point) => point.value));
+    const rawMax = Math.max(...values.map((point) => point.value));
+    let minimum = Math.min(0, rawMin);
+    let maximum = Math.max(0, rawMax);
+    if (minimum === maximum) maximum = minimum + 1;
+    const range = maximum - minimum;
+    const x = (index) => values.length === 1
+      ? padding.left + plotWidth / 2
+      : padding.left + (index / (values.length - 1)) * plotWidth;
+    const y = (value) => padding.top + ((maximum - value) / range) * plotHeight;
+    const baseline = y(Math.max(minimum, Math.min(0, maximum)));
+    const coordinates = values.map((point, index) => ({ ...point, x: x(index), y: y(point.value) }));
+    const linePath = coordinates.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+    const areaPath = `${linePath} L${coordinates.at(-1).x.toFixed(1)},${baseline.toFixed(1)} L${coordinates[0].x.toFixed(1)},${baseline.toFixed(1)} Z`;
+    const formatValue = options.formatValue ?? ((value) => numberFormat.format(value));
+    const formatAxis = options.formatAxis ?? ((value) => compactNumberFormat.format(value));
+    const aria = `${options.title}: ${values.map((point) => `${point.year} — ${formatValue(point.value)}`).join(", ")}`;
+    const tickCount = 4;
+    const yTicks = Array.from({ length: tickCount + 1 }, (_, index) => maximum - (range * index / tickCount));
+
+    return `
+      <div class="line-chart">
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(aria)}" preserveAspectRatio="xMidYMid meet">
+          <g class="chart-grid-lines" aria-hidden="true">
+            ${yTicks.map((tick) => `<line x1="${padding.left}" y1="${y(tick).toFixed(1)}" x2="${width - padding.right}" y2="${y(tick).toFixed(1)}"></line>`).join("")}
+          </g>
+          <g class="chart-axis-labels" aria-hidden="true">
+            ${yTicks.map((tick) => `<text x="${padding.left - 10}" y="${(y(tick) + 4).toFixed(1)}" text-anchor="end">${escapeHtml(formatAxis(tick))}</text>`).join("")}
+            ${coordinates.map((point) => `<text x="${point.x.toFixed(1)}" y="${height - 14}" text-anchor="middle">${point.year}</text>`).join("")}
+          </g>
+          <path class="chart-area" d="${areaPath}"></path>
+          <path class="chart-line" d="${linePath}"></path>
+          <g class="chart-points">
+            ${coordinates.map((point) => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5"><title>${point.year}: ${escapeHtml(formatValue(point.value))}</title></circle>`).join("")}
+          </g>
+        </svg>
+        <ol class="chart-value-row" aria-hidden="true">
+          ${values.map((point) => `<li><span>${point.year}</span><strong>${escapeHtml(formatValue(point.value))}</strong></li>`).join("")}
+        </ol>
+      </div>
+    `;
+  }
+
+  function aggregateEnterpriseMetric(metricKey) {
+    const totals = new Map();
+    data.enterprise_metrics.forEach((metric) => {
+      const value = metric[metricKey];
+      if (value === null || value === undefined) return;
+      const year = Number(metric.year);
+      const current = totals.get(year) ?? { year, value: 0, coverage: 0 };
+      current.value += Number(value);
+      current.coverage += 1;
+      totals.set(year, current);
+    });
+    return [...totals.values()].sort((a, b) => a.year - b.year);
+  }
+
+  function renderOverviewAnalytics() {
+    const revenue = aggregateEnterpriseMetric("revenue");
+    const employees = aggregateEnterpriseMetric("employees");
+    byId("overviewRevenueChart").innerHTML = lineChartMarkup(revenue, {
+      title: "Суммарная выручка по доступным отчётам",
+      formatValue: formatMoney
+    });
+    byId("overviewEmployeesChart").innerHTML = lineChartMarkup(employees, {
+      title: "Суммарная численность сотрудников по доступным отчётам",
+      formatValue: (value) => formatNumber(value, " чел.")
+    });
+    const revenueLatest = revenue.at(-1);
+    const employeesLatest = employees.at(-1);
+    byId("overviewRevenueMeta").textContent = revenueLatest
+      ? `${revenueLatest.year}: отчёты ${revenueLatest.coverage} предприятий`
+      : "Годовых данных нет";
+    byId("overviewEmployeesMeta").textContent = employeesLatest
+      ? `${employeesLatest.year}: данные ${employeesLatest.coverage} предприятий`
+      : "Годовых данных нет";
+
+    const industries = data.industries
+      .map((industry) => ({ industry, count: enterprisesByIndustry.get(industry.id)?.length ?? 0 }))
+      .sort((a, b) => b.count - a.count);
+    const maximum = Math.max(...industries.map((item) => item.count), 1);
+    byId("overviewIndustryChart").innerHTML = industries.map(({ industry, count }) => `
+      <button class="bar-ledger-row" type="button" data-dashboard-industry="${industry.id}" aria-label="Показать предприятия отрасли ${escapeHtml(industry.name)}">
+        <span>${escapeHtml(industry.name)}</span>
+        <i aria-hidden="true"><b style="width:${(count / maximum) * 100}%"></b></i>
+        <strong>${count}</strong>
+      </button>
+    `).join("");
   }
 
   function renderOverviewTerritories() {
@@ -308,6 +494,9 @@
     }
     if (options.focus !== false) {
       byId(`view-${validName}`)?.focus({ preventScroll: true });
+    }
+    if (validName === "overview" && enterpriseMap) {
+      window.setTimeout(() => enterpriseMap.invalidateSize({ animate: false }), 0);
     }
   }
 
@@ -494,15 +683,64 @@
     return `<div class="passport-field"><dt>${escapeHtml(label)}</dt><dd>${html ? value : escapeHtml(displayValue(value))}</dd></div>`;
   }
 
+  function metricChartsMarkup(metrics, catalog) {
+    const charts = catalog.map((metric) => {
+      const points = metrics
+        .filter((item) => item[metric.key] !== null && item[metric.key] !== undefined)
+        .map((item) => ({ year: item.year, value: item[metric.key] }));
+      if (!points.length) return "";
+      const periodLabel = points.length === 1
+        ? "1 год в базе"
+        : `${points.length} ${points.length < 5 ? "года" : "лет"} в базе`;
+      return `
+        <article class="metric-chart-panel">
+          <header><div><h4>${escapeHtml(metric.title)}</h4><p>${periodLabel}</p></div></header>
+          ${lineChartMarkup(points, {
+            title: metric.title,
+            formatValue: metric.format,
+            formatAxis: metric.axisFormat
+          })}
+        </article>
+      `;
+    }).filter(Boolean);
+    return charts.length
+      ? `<div class="metric-chart-grid">${charts.join("")}</div>`
+      : '<div class="chart-empty"><strong>Нет годовых показателей</strong><span>Для этой записи в базе пока нет числового ряда.</span></div>';
+  }
+
+  function enterpriseMetricTableMarkup(metrics) {
+    const activeMetrics = ENTERPRISE_METRIC_CATALOG.filter((metric) => metrics.some((item) => item[metric.key] !== null && item[metric.key] !== undefined));
+    if (!metrics.length || !activeMetrics.length) return "";
+    return `
+      <details class="metric-table-details">
+        <summary>Все значения по годам</summary>
+        <div class="data-table-wrap">
+          <table class="passport-metrics">
+            <thead><tr><th>Год</th>${activeMetrics.map((metric) => `<th>${escapeHtml(metric.title)}</th>`).join("")}</tr></thead>
+            <tbody>
+              ${[...metrics].sort((a, b) => b.year - a.year).map((item) => `
+                <tr>
+                  <td>${item.year}</td>
+                  ${activeMetrics.map((metric) => `<td>${item[metric.key] === null || item[metric.key] === undefined ? "—" : escapeHtml(metric.format(item[metric.key]))}</td>`).join("")}
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    `;
+  }
+
   function focusReturnSelector(element) {
     if (!(element instanceof HTMLElement)) return null;
     if (element.id) return `#${element.id}`;
 
-    const enterpriseId = element.dataset.enterpriseId || element.dataset.openEnterprise;
+    const mapEnterpriseId = element.dataset.mapOpenEnterprise;
+    if (mapEnterpriseId) return `.map-popup-action[data-map-open-enterprise="${mapEnterpriseId}"]`;
+    const cityId = element.dataset.cityId;
+    if (cityId) return `.territory-row[data-city-id="${cityId}"]`;
+    const enterpriseId = element.dataset.openEnterprise;
     if (!enterpriseId) return null;
-    if (element.classList.contains("map-point")) {
-      return `.map-point[data-enterprise-id="${enterpriseId}"]`;
-    }
     if (element.classList.contains("enterprise-name-button")) {
       return `.enterprise-name-button[data-open-enterprise="${enterpriseId}"]`;
     }
@@ -550,12 +788,34 @@
     }
   }
 
+  function showPassportWindow({ code, html, trigger, type, enterpriseId = null }) {
+    state.selectedEnterprise = enterpriseId;
+    state.modalType = type;
+    state.lastFocus = focusReturnSelector(trigger) || focusReturnSelector(document.activeElement);
+    byId("passportCode").textContent = code;
+    byId("passportBody").innerHTML = html;
+
+    const passport = byId("passport");
+    passport.hidden = false;
+    passport.scrollTop = 0;
+    passport.setAttribute("aria-hidden", "false");
+    byId("passportScrim").hidden = false;
+    document.body.classList.add("passport-open");
+    setPassportBackgroundInert(true);
+    requestAnimationFrame(() => {
+      passport.classList.add("is-open");
+      byId("passportClose").focus();
+    });
+    updateSelectedMapMarker();
+    renderEnterprises();
+  }
+
   function openPassport(enterpriseId, trigger) {
     const enterprise = enterprisesById.get(Number(enterpriseId));
     if (!enterprise) return;
     const city = citiesById.get(enterprise.city_id);
     const industry = industriesById.get(enterprise.industry_id);
-    const metrics = [...(metricsByEnterprise.get(enterprise.id) ?? [])].sort((a, b) => b.year - a.year);
+    const metrics = [...(metricsByEnterprise.get(enterprise.id) ?? [])].sort((a, b) => a.year - b.year);
     const products = productsByEnterprise.get(enterprise.id) ?? [];
     const projects = projectsByEnterprise.get(enterprise.id) ?? [];
     const sourceIds = getEnterpriseSourceIds(enterprise.id);
@@ -572,8 +832,7 @@
       ? `<a href="mailto:${escapeHtml(enterprise.email)}">${escapeHtml(enterprise.email)}</a>`
       : "Не указано";
 
-    const body = byId("passportBody");
-    body.innerHTML = `
+    const html = `
       <h2 id="passportTitle">${escapeHtml(enterpriseLabel(enterprise))}</h2>
       <p class="passport-subtitle">${escapeHtml(industry?.name ?? "Отрасль не указана")} · ${escapeHtml(city?.name ?? "Территория не указана")}</p>
 
@@ -606,25 +865,13 @@
         ` : `<p class="passport-description">${escapeHtml(displayValue(enterprise.products))}</p>`}
       </section>
 
-      <section class="passport-section">
-        <h3>Показатели</h3>
-        ${metrics.length ? `
-          <div class="data-table-wrap">
-            <table class="passport-metrics">
-              <thead><tr><th>Год</th><th>Сотрудники</th><th>Выручка</th><th>Инвестиции</th></tr></thead>
-              <tbody>
-                ${metrics.map((item) => `
-                  <tr>
-                    <td>${item.year}</td>
-                    <td>${item.employees === null ? "—" : numberFormat.format(item.employees)}</td>
-                    <td>${item.revenue === null ? "—" : escapeHtml(formatMoney(item.revenue))}</td>
-                    <td>${item.investments === null ? "—" : escapeHtml(formatMoney(item.investments))}</td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        ` : '<p class="passport-description">Показатели по годам в базе не указаны.</p>'}
+      <section class="passport-section passport-section-analytics">
+        <div class="passport-section-heading">
+          <h3>Показатели по годам</h3>
+          <p>Только опубликованные значения; пропуски не достраиваются.</p>
+        </div>
+        ${metricChartsMarkup(metrics, ENTERPRISE_METRIC_CATALOG)}
+        ${enterpriseMetricTableMarkup(metrics)}
       </section>
 
       ${projects.length ? `
@@ -651,25 +898,90 @@
         ` : '<p class="passport-description">Связанные источники не указаны.</p>'}
       </section>
     `;
-
-    state.selectedEnterprise = enterprise.id;
-    state.lastFocus = focusReturnSelector(trigger) || focusReturnSelector(document.activeElement);
-    byId("passportCode").textContent = `Паспорт П-${String(enterprise.id).padStart(4, "0")}`;
-    const passport = byId("passport");
-    passport.hidden = false;
-    passport.setAttribute("aria-hidden", "false");
-    byId("passportScrim").hidden = false;
-    document.body.classList.add("passport-open");
-    setPassportBackgroundInert(true);
-    requestAnimationFrame(() => {
-      passport.classList.add("is-open");
-      byId("passportClose").focus();
+    showPassportWindow({
+      code: `Паспорт П-${String(enterprise.id).padStart(4, "0")}`,
+      html,
+      trigger,
+      type: "enterprise",
+      enterpriseId: enterprise.id
     });
-    renderMap();
-    renderEnterprises();
   }
 
-  function closePassport() {
+  function openTerritoryPassport(cityId, trigger) {
+    const city = citiesById.get(Number(cityId));
+    if (!city) return;
+    const enterprises = enterprisesByCity.get(city.id) ?? [];
+    const metrics = [...(territoryMetricsByCity.get(city.id) ?? [])].sort((a, b) => a.year - b.year);
+    const latestPopulation = metrics.filter((item) => item.population !== null && item.population !== undefined).at(-1);
+    const latestUnemployment = metrics.filter((item) => item.unemployment_rate !== null && item.unemployment_rate !== undefined).at(-1);
+    const sourceIds = [...new Set(metrics.map((item) => item.source_id).filter(Boolean))];
+    const sources = sourceIds.map((id) => sourcesById.get(id)).filter(Boolean);
+    const territoryCatalog = [
+      { key: "population", title: "Численность населения", format: (value) => formatNumber(value, " чел.") },
+      {
+        key: "unemployment_rate",
+        title: "Уровень безработицы",
+        format: (value) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(value)}%`,
+        axisFormat: (value) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(value)}%`
+      }
+    ];
+    const html = `
+      <h2 id="passportTitle">${escapeHtml(city.name)}</h2>
+      <p class="passport-subtitle">${escapeHtml(city.territory_type || "Территория")} · Оренбургская область</p>
+      <dl class="passport-fields">
+        ${fieldMarkup("Тип территории", city.territory_type)}
+        ${fieldMarkup("Район", city.district)}
+        ${fieldMarkup("ОКТМО", city.oktmo)}
+        ${fieldMarkup("Административный центр", city.administrative_center)}
+        ${fieldMarkup("Предприятия в реестре", enterprises.length)}
+        ${fieldMarkup("Последняя численность", latestPopulation ? `${numberFormat.format(latestPopulation.population)} · ${latestPopulation.year}` : null)}
+        ${fieldMarkup("Последняя безработица", latestUnemployment ? `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(latestUnemployment.unemployment_rate)}% · ${latestUnemployment.year}` : null)}
+        ${fieldMarkup("Координаты", city.latitude !== null && city.longitude !== null ? `${city.latitude}, ${city.longitude}` : null)}
+      </dl>
+      <section class="passport-section passport-section-analytics">
+        <div class="passport-section-heading">
+          <h3>Показатели территории по годам</h3>
+          <p>Безработица отображается только там, где значение есть в исходной базе.</p>
+        </div>
+        <div class="metric-chart-grid">
+          ${territoryCatalog.map((metric) => {
+            const points = metrics
+              .filter((item) => item[metric.key] !== null && item[metric.key] !== undefined)
+              .map((item) => ({ year: item.year, value: item[metric.key] }));
+            return `
+              <article class="metric-chart-panel">
+                <header><div><h4>${escapeHtml(metric.title)}</h4><p>${points.length ? `${points.length} значений в базе` : "Нет опубликованных значений"}</p></div></header>
+                ${lineChartMarkup(points, { title: metric.title, formatValue: metric.format, formatAxis: metric.axisFormat })}
+              </article>
+            `;
+          }).join("")}
+        </div>
+      </section>
+      <section class="passport-section territory-actions">
+        <button class="secondary-action" type="button" data-show-city-enterprises="${city.id}">Открыть предприятия территории</button>
+      </section>
+      <section class="passport-section">
+        <h3>Источники показателей</h3>
+        ${sources.length ? `
+          <ul class="passport-list">
+            ${sources.map((source) => {
+              const url = safeUrl(source.url);
+              const title = url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(source.name)}</a>` : escapeHtml(source.name);
+              return `<li><strong>${title}</strong><span>${escapeHtml(source.source_type || "Тип не указан")} · доступ ${escapeHtml(formatDate(source.access_date))}</span></li>`;
+            }).join("")}
+          </ul>
+        ` : '<p class="passport-description">Источники годовых показателей не указаны.</p>'}
+      </section>
+    `;
+    showPassportWindow({
+      code: `Паспорт Т-${String(city.id).padStart(2, "0")}`,
+      html,
+      trigger,
+      type: "territory"
+    });
+  }
+
+  function closePassport(options = {}) {
     const passport = byId("passport");
     passport.classList.remove("is-open");
     passport.setAttribute("aria-hidden", "true");
@@ -677,13 +989,16 @@
     document.body.classList.remove("passport-open");
     setPassportBackgroundInert(false);
     state.selectedEnterprise = null;
-    renderMap();
+    state.modalType = null;
+    updateSelectedMapMarker();
     renderEnterprises();
     window.setTimeout(() => {
       if (!passport.classList.contains("is-open")) passport.hidden = true;
-    }, 430);
-    const returnTarget = state.lastFocus ? document.querySelector(state.lastFocus) : null;
-    returnTarget?.focus();
+    }, 260);
+    if (options.restoreFocus !== false) {
+      const returnTarget = state.lastFocus ? document.querySelector(state.lastFocus) : null;
+      returnTarget?.focus();
+    }
     state.lastFocus = null;
   }
 
@@ -708,20 +1023,15 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "territory-row";
+      button.dataset.cityId = city.id;
       button.innerHTML = `
         <span class="territory-id">Т-${String(city.id).padStart(2, "0")}</span>
         <strong>${escapeHtml(city.name)}</strong>
-        <span><b class="territory-value">${enterprises.length}</b> предприятий</span>
+        <span><b class="territory-value">${enterprises.length}</b> ${pluralize(enterprises.length, "предприятие", "предприятия", "предприятий")}</span>
         <span>${leadingIndustryId ? escapeHtml(industryName(leadingIndustryId)) : latest?.population ? `Население: ${numberFormat.format(latest.population)}` : "Отрасли не указаны"}</span>
-        <span class="territory-open">Открыть реестр</span>
+        <span class="territory-open">Смотреть показатели</span>
       `;
-      button.addEventListener("click", () => {
-        byId("enterpriseCity").value = String(city.id);
-        byId("enterpriseSearch").value = "";
-        state.enterprisePage = 1;
-        renderEnterprises();
-        showView("enterprises");
-      });
+      button.addEventListener("click", () => openTerritoryPassport(city.id, button));
       container.append(button);
     });
     byId("territoryEmpty").hidden = items.length > 0;
@@ -922,6 +1232,15 @@
     byId("exportEnterprises").addEventListener("click", exportEnterprises);
 
     byId("territorySearch").addEventListener("input", renderTerritories);
+    all("[data-dashboard-industry]").forEach((button) => {
+      button.addEventListener("click", () => {
+        byId("enterpriseIndustry").value = button.dataset.dashboardIndustry;
+        byId("enterpriseSearch").value = "";
+        state.enterprisePage = 1;
+        renderEnterprises();
+        showView("enterprises");
+      });
+    });
 
     ["sourceSearch", "sourceType"].forEach((id) => {
       const element = byId(id);
@@ -939,11 +1258,24 @@
 
     byId("passportClose").addEventListener("click", closePassport);
     byId("passportScrim").addEventListener("click", closePassport);
+    byId("passportBody").addEventListener("click", (event) => {
+      const cityButton = event.target.closest("[data-show-city-enterprises]");
+      if (!cityButton) return;
+      const cityId = cityButton.dataset.showCityEnterprises;
+      closePassport({ restoreFocus: false });
+      byId("enterpriseCity").value = cityId;
+      byId("enterpriseSearch").value = "";
+      state.enterprisePage = 1;
+      renderEnterprises();
+      showView("enterprises");
+    });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && !byId("passport").hidden) closePassport();
       trapPassportFocus(event);
     });
     document.addEventListener("click", (event) => {
+      const mapAction = event.target.closest("[data-map-open-enterprise]");
+      if (mapAction) openPassport(Number(mapAction.dataset.mapOpenEnterprise), mapAction);
       if (!event.target.closest(".main-search")) byId("searchSuggestions").hidden = true;
     });
     window.addEventListener("hashchange", () => showView(location.hash.slice(1), { updateHash: false }));
@@ -953,8 +1285,10 @@
     root.classList.add("is-ready");
     initMetadata();
     initFilters();
+    initEnterpriseMap();
     renderMap();
     renderOverviewTerritories();
+    renderOverviewAnalytics();
     renderEnterprises();
     renderTerritories();
     renderIndustries();

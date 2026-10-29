@@ -57,7 +57,6 @@
   --success: #176b49;
   --radius: 10px;
   --max-width: 1520px;
-  --shadow-drawer: -14px 18px 38px rgb(21 26 29 / 0.22);
 }
 
 * {
@@ -577,111 +576,109 @@ select:hover {
   border-color: var(--ink);
 }
 
-.coordinate-map {
+.enterprise-map {
   position: relative;
+  z-index: 1;
   min-height: 510px;
   overflow: hidden;
-  background-color: #e8eeec;
-  background-image:
-    repeating-linear-gradient(0deg, transparent 0 79px, rgb(23 48 111 / 0.12) 80px),
-    repeating-linear-gradient(90deg, transparent 0 99px, rgb(23 48 111 / 0.12) 100px);
+  background: #e8eeec;
 }
 
-.coordinate-map::after {
-  content: "ОРЕНБУРГСКАЯ ОБЛАСТЬ";
-  position: absolute;
-  right: 26px;
-  bottom: 22px;
-  color: rgb(23 48 111 / 0.14);
-  font-family: "Fira Sans Condensed", sans-serif;
-  font-size: clamp(28px, 5vw, 66px);
-  font-weight: 700;
-  line-height: 0.85;
-  letter-spacing: -0.03em;
-  pointer-events: none;
+.enterprise-map.map-unavailable {
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  background: var(--steel-1);
 }
 
-.map-axis {
-  position: absolute;
-  z-index: 2;
-  display: flex;
-  justify-content: space-between;
-  color: var(--blue-dark);
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-}
-
-.map-axis-x {
-  left: 24px;
-  right: 24px;
-  bottom: 8px;
-}
-
-.map-axis-y {
-  top: 24px;
-  bottom: 32px;
-  left: 8px;
-  flex-direction: column;
-}
-
-.map-points {
-  position: absolute;
-  inset: 28px 36px 38px 42px;
-  z-index: 4;
-}
-
-.map-point {
-  position: absolute;
-  width: 11px;
-  height: 11px;
-  padding: 0;
-  transform: translate(-50%, -50%);
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: var(--blue);
-  box-shadow: 2px 3px 7px rgb(21 26 29 / 0.3);
-}
-
-.map-point::before {
-  content: "";
-  position: absolute;
-  inset: -9px;
-}
-
-.map-point::after {
-  content: attr(data-label);
-  position: absolute;
-  z-index: 9;
-  left: 14px;
-  bottom: 14px;
-  width: max-content;
-  max-width: 240px;
-  padding: 7px 9px;
+.map-load-error {
+  max-width: 34ch;
+  margin: 0;
+  padding: 18px;
   border: 1px solid var(--ink);
   background: var(--surface);
+  text-align: center;
+}
+
+.enterprise-map .leaflet-control-zoom {
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 3px 5px 14px rgb(21 26 29 / 0.16);
+}
+
+.enterprise-map .leaflet-control-zoom a {
+  width: 42px;
+  height: 42px;
+  border-bottom-color: var(--steel-2);
+  background: var(--surface);
   color: var(--ink);
+  font: 600 22px/42px "Fira Sans", sans-serif;
+}
+
+.enterprise-map .leaflet-control-zoom a:hover {
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+}
+
+.enterprise-map .leaflet-control-attribution {
+  padding: 3px 6px;
+  background: rgb(255 255 255 / 0.9);
+  color: var(--muted);
+  font: 11px/1.3 "Fira Sans", sans-serif;
+}
+
+.enterprise-map .leaflet-control-attribution a {
+  color: var(--blue-dark);
+}
+
+.enterprise-map .leaflet-popup-content-wrapper {
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 4px 7px 22px rgb(21 26 29 / 0.24);
+}
+
+.enterprise-map .leaflet-popup-content {
+  margin: 14px 16px 16px;
+  font-family: "Fira Sans", sans-serif;
+}
+
+.enterprise-map .leaflet-popup-tip {
+  background: var(--surface);
+}
+
+.map-popup {
+  display: grid;
+  gap: 5px;
+}
+
+.map-popup strong {
+  font-family: "Fira Sans Condensed", sans-serif;
+  font-size: 17px;
+  line-height: 1.08;
+}
+
+.map-popup span,
+.map-popup small {
+  color: var(--muted);
   font-size: 12px;
-  line-height: 1.25;
-  opacity: 0;
-  pointer-events: none;
 }
 
-.map-point:hover::after,
-.map-point:focus-visible::after {
-  opacity: 1;
-}
-
-.map-point.is-major {
-  width: 17px;
-  height: 17px;
+.map-popup-action {
+  min-height: 40px;
+  margin-top: 7px;
+  border: 1px solid var(--action);
+  border-radius: 4px;
   background: var(--action);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.map-point.is-selected {
-  z-index: 8;
-  outline: 3px solid var(--ink);
-  outline-offset: 3px;
+.map-popup-action:hover {
+  border-color: var(--action-dark);
+  background: var(--action-dark);
 }
 
 .map-key {
@@ -715,11 +712,217 @@ select:hover {
 
 .map-empty {
   position: absolute;
-  z-index: 6;
+  z-index: 500;
   inset: 50% auto auto 50%;
   width: min(310px, 80%);
   transform: translate(-50%, -50%);
   background: var(--surface);
+}
+
+.analytics-board {
+  margin-top: 54px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: var(--surface);
+}
+
+.analytics-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 0 18px;
+  border-bottom: 1px solid var(--steel-2);
+}
+
+.analytics-heading h2,
+.chart-panel h3,
+.metric-chart-panel h4 {
+  margin: 0;
+}
+
+.analytics-heading h2 {
+  font-size: clamp(1.9rem, 4vw, 3.1rem);
+}
+
+.analytics-heading p,
+.chart-panel header p,
+.metric-chart-panel header p,
+.passport-section-heading p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.analytics-heading > span {
+  color: var(--blue-dark);
+  font-family: "Fira Sans Condensed", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+}
+
+.chart-panel {
+  min-width: 0;
+  padding: 22px;
+  border-right: 1px solid var(--steel-2);
+  border-bottom: 1px solid var(--steel-2);
+}
+
+.chart-panel:nth-child(2n) {
+  border-right: 0;
+}
+
+.chart-panel:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.chart-panel-wide {
+  min-height: 360px;
+}
+
+.chart-panel header,
+.metric-chart-panel header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.chart-panel h3 {
+  font-size: 20px;
+}
+
+.chart-stage {
+  min-height: 250px;
+}
+
+.line-chart svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart-grid-lines line {
+  stroke: var(--steel-1);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-axis-labels text {
+  fill: var(--muted);
+  stroke: none;
+  font: 12px "Fira Sans", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-area {
+  fill: var(--blue-soft);
+  stroke: none;
+  opacity: 0.72;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-points circle {
+  fill: var(--surface);
+  stroke: var(--blue);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-value-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 4px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--steel-2);
+  list-style: none;
+}
+
+.chart-value-row li {
+  display: flex;
+  gap: 7px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-value-row span {
+  color: var(--muted);
+}
+
+.chart-empty {
+  min-height: 210px;
+  display: grid;
+  place-content: center;
+  gap: 5px;
+  padding: 20px;
+  border: 1px dashed var(--steel-3);
+  color: var(--muted);
+  text-align: center;
+}
+
+.chart-empty strong {
+  color: var(--ink);
+}
+
+.bar-ledger {
+  display: grid;
+  gap: 1px;
+  background: var(--steel-2);
+}
+
+.bar-ledger-row {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: minmax(130px, 1.25fr) minmax(90px, 1fr) 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 0;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+}
+
+.bar-ledger-row:hover {
+  background: var(--blue-soft);
+}
+
+.bar-ledger-row > span {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-ledger-row i {
+  height: 7px;
+  overflow: hidden;
+  background: var(--steel-1);
+}
+
+.bar-ledger-row i b {
+  height: 100%;
+  display: block;
+  background: var(--blue);
+}
+
+.bar-ledger-row > strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .territory-index {
@@ -1217,19 +1420,23 @@ select:hover {
 .passport {
   position: fixed;
   z-index: 60;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(640px, 94vw);
+  top: 50%;
+  left: 50%;
+  width: min(1160px, calc(100vw - 40px));
+  max-height: calc(100dvh - 40px);
   overflow-y: auto;
-  transform: translateX(104%);
+  transform: translate(-50%, calc(-50% + 18px)) scale(0.985);
   background: var(--surface);
-  box-shadow: var(--shadow-drawer);
-  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 24px 72px rgb(21 26 29 / 0.34);
+  opacity: 0;
+  transition:
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 180ms ease-out;
 }
 
 .passport.is-open {
-  transform: translateX(0);
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 .passport-bar {
@@ -1270,13 +1477,13 @@ select:hover {
 }
 
 .passport-body {
-  padding: 30px 30px 50px;
+  padding: 34px 34px 54px;
 }
 
 .passport-body > h2 {
-  max-width: 16ch;
+  max-width: 24ch;
   margin-bottom: 8px;
-  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-size: clamp(2.2rem, 5vw, 4.4rem);
   line-height: 0.96;
   letter-spacing: -0.035em;
 }
@@ -1288,7 +1495,7 @@ select:hover {
 
 .passport-fields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border-top: 1px solid var(--ink);
   border-left: 1px solid var(--steel-2);
 }
@@ -1323,6 +1530,26 @@ select:hover {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--ink);
   font-size: 21px;
+}
+
+.passport-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ink);
+}
+
+.passport-section-heading h3 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.passport-section-heading p {
+  max-width: 52ch;
+  text-align: right;
 }
 
 .passport-description {
@@ -1374,7 +1601,52 @@ select:hover {
 
 .passport-metrics th {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
+}
+
+.metric-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 18px;
+  border-top: 1px solid var(--steel-2);
+  border-left: 1px solid var(--steel-2);
+}
+
+.metric-chart-panel {
+  min-width: 0;
+  padding: 18px;
+  border-right: 1px solid var(--steel-2);
+  border-bottom: 1px solid var(--steel-2);
+}
+
+.metric-chart-panel h4 {
+  font-size: 18px;
+}
+
+.metric-chart-panel .chart-empty {
+  min-height: 250px;
+}
+
+.metric-table-details {
+  margin-top: 20px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.metric-table-details summary {
+  padding: 13px 4px;
+  color: var(--blue-dark);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.metric-table-details[open] summary {
+  border-bottom: 1px solid var(--steel-2);
+}
+
+.territory-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .passport-scrim {
@@ -1382,7 +1654,7 @@ select:hover {
   z-index: 50;
   inset: 0;
   border: 0;
-  background: rgb(21 26 29 / 0.54);
+  background: rgb(21 26 29 / 0.62);
   cursor: default;
 }
 
@@ -1467,6 +1739,10 @@ select:hover {
   .territory-open {
     display: none;
   }
+
+  .passport-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 820px) {
@@ -1523,8 +1799,23 @@ select:hover {
     min-width: 0;
   }
 
-  .coordinate-map {
+  .enterprise-map {
     min-height: 450px;
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-panel,
+  .chart-panel:nth-child(2n),
+  .chart-panel:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--steel-2);
+  }
+
+  .chart-panel:last-child {
+    border-bottom: 0;
   }
 
   .view-heading {
@@ -1549,7 +1840,7 @@ select:hover {
 @media (max-width: 620px) {
   .masthead {
     min-height: 66px;
-    padding: 10px 16px;
+    padding: 10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
   }
 
   .brand-mark {
@@ -1566,7 +1857,8 @@ select:hover {
   }
 
   .section-rail {
-    padding-inline: 5px;
+    padding-right: max(5px, env(safe-area-inset-right));
+    padding-left: max(5px, env(safe-area-inset-left));
   }
 
   .section-link {
@@ -1575,7 +1867,7 @@ select:hover {
   }
 
   .view {
-    padding: 30px 16px 54px;
+    padding: 30px max(16px, env(safe-area-inset-right)) max(54px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   }
 
   .overview-head {
@@ -1612,12 +1904,31 @@ select:hover {
     width: 100%;
   }
 
-  .coordinate-map {
-    min-height: 390px;
+  .enterprise-map {
+    min-height: 380px;
   }
 
   .map-key {
     display: grid;
+  }
+
+  .analytics-board {
+    margin-top: 42px;
+  }
+
+  .analytics-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 20px 0 16px;
+  }
+
+  .chart-panel {
+    padding: 18px 12px;
+  }
+
+  .bar-ledger-row {
+    grid-template-columns: minmax(110px, 1fr) minmax(68px, 0.7fr) 30px;
+    gap: 8px;
   }
 
   .filter-board,
@@ -1659,21 +1970,73 @@ select:hover {
   }
 
   .passport {
+    top: 0;
+    left: 0;
     width: 100%;
+    height: 100dvh;
+    max-height: none;
+    transform: translateY(16px) scale(0.995);
+    box-shadow: none;
+  }
+
+  .passport.is-open {
+    transform: translateY(0) scale(1);
+  }
+
+  .passport-bar {
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-right: max(18px, env(safe-area-inset-right));
+    padding-left: max(18px, env(safe-area-inset-left));
   }
 
   .passport-body {
-    padding: 26px 18px 44px;
+    padding: 26px max(18px, env(safe-area-inset-right)) max(44px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
   }
 
   .passport-fields {
     grid-template-columns: 1fr;
   }
 
+  .passport-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .passport-section-heading p {
+    text-align: left;
+  }
+
+  .metric-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-chart-panel {
+    padding: 16px 10px;
+  }
+
+  .chart-value-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-value-row li {
+    justify-content: space-between;
+  }
+
   .footer {
     align-items: flex-start;
     flex-direction: column;
-    padding: 22px 16px;
+    padding: 22px max(16px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+}
+
+@media (pointer: coarse) {
+  .section-link,
+  .bar-ledger-row,
+  .territory-row,
+  .industry-row,
+  .map-popup-action {
+    min-height: 44px;
   }
 }
 

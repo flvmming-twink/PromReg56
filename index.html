@@ -2,12 +2,14 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Открытый реестр предприятий, отраслей, территорий и источников Оренбургской области.">
   <meta name="theme-color" content="#f2f4f3">
   <title>PromRegion56 — промышленный атлас Оренбургской области</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="styles.css">
+  <script src="assets/vendor/leaflet/leaflet.js" defer></script>
   <script src="data.js" defer></script>
   <script src="app.js" defer></script>
 </head>
@@ -95,16 +97,13 @@
               </label>
             </div>
           </div>
-          <div class="coordinate-map" id="coordinateMap" aria-label="Координатная карта предприятий Оренбургской области">
-            <div class="map-axis map-axis-x" aria-hidden="true"><span>52°</span><span>56°</span><span>60°</span><span>64°</span></div>
-            <div class="map-axis map-axis-y" aria-hidden="true"><span>54°</span><span>52°</span><span>50°</span></div>
-            <div class="map-points" id="mapPoints"></div>
+          <div class="enterprise-map" id="enterpriseMap" aria-label="Интерактивная карта предприятий Оренбургской области">
             <div class="map-empty empty-state" id="mapEmpty" hidden>По выбранным условиям объектов нет.</div>
           </div>
           <div class="map-key">
             <span><i class="key-dot key-dot-major"></i>Крупное или градообразующее</span>
             <span><i class="key-dot"></i>Остальные предприятия</span>
-            <span>Точка строится по координатам предприятия или центра территории</span>
+            <span>Если точного адреса нет, точка показана рядом с центром территории</span>
           </div>
         </section>
 
@@ -122,6 +121,30 @@
           </button>
         </section>
       </div>
+
+      <section class="analytics-board" aria-labelledby="overviewAnalyticsTitle">
+        <header class="analytics-heading">
+          <div>
+            <h2 id="overviewAnalyticsTitle">Динамика по доступным отчётам</h2>
+            <p>Суммы меняются вместе с числом предприятий, по которым есть данные за конкретный год.</p>
+          </div>
+          <span>2021–2025</span>
+        </header>
+        <div class="analytics-grid">
+          <article class="chart-panel chart-panel-wide">
+            <header><div><h3>Выручка предприятий</h3><p id="overviewRevenueMeta">Считаем доступные отчёты…</p></div></header>
+            <div id="overviewRevenueChart" class="chart-stage"></div>
+          </article>
+          <article class="chart-panel">
+            <header><div><h3>Численность сотрудников</h3><p id="overviewEmployeesMeta">Считаем доступные отчёты…</p></div></header>
+            <div id="overviewEmployeesChart" class="chart-stage"></div>
+          </article>
+          <article class="chart-panel">
+            <header><div><h3>Предприятия по отраслям</h3><p>Состав всего открытого реестра</p></div></header>
+            <div id="overviewIndustryChart" class="bar-ledger"></div>
+          </article>
+        </div>
+      </section>
 
       <div class="source-note">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/><path d="M12 10v7M12 7h.01"/></svg>
@@ -248,7 +271,7 @@
     </section>
   </main>
 
-  <aside class="passport" id="passport" role="dialog" aria-modal="true" aria-labelledby="passportTitle" aria-hidden="true" hidden>
+  <section class="passport" id="passport" role="dialog" aria-modal="true" aria-labelledby="passportTitle" aria-hidden="true" tabindex="-1" hidden>
     <div class="passport-bar">
       <span id="passportCode">Паспорт предприятия</span>
       <button class="icon-action" id="passportClose" type="button" aria-label="Закрыть паспорт">
@@ -258,7 +281,7 @@
     <div class="passport-body" id="passportBody">
       <h2 id="passportTitle">Предприятие</h2>
     </div>
-  </aside>
+  </section>
   <button class="passport-scrim" id="passportScrim" type="button" tabindex="-1" aria-hidden="true" aria-label="Закрыть паспорт" hidden></button>
 
   <footer class="footer">

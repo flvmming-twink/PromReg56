@@ -50,11 +50,21 @@
     return result;
   };
 
-  const metricsByEnterprise = groupBy(data.enterprise_metrics, "enterprise_id");
+  const enterpriseMetricRows = data.enterprise_metric_view ?? data.enterprise_metrics;
+  const territoryMetricRows = data.territory_metric_view ?? data.territory_metrics;
+  const metricsByEnterprise = groupBy(enterpriseMetricRows, "enterprise_id");
+  const metricValuesByEnterprise = groupBy(
+    (data.metric_values ?? []).filter((item) => item.enterprise_id !== null),
+    "enterprise_id"
+  );
+  const metricValuesByCity = groupBy(
+    (data.metric_values ?? []).filter((item) => item.city_id !== null),
+    "city_id"
+  );
   const productsByEnterprise = groupBy(data.enterprise_products, "enterprise_id");
   const sourceLinksByEnterprise = groupBy(data.enterprise_sources, "enterprise_id");
   const projectsByEnterprise = groupBy(data.investment_projects, "enterprise_id");
-  const territoryMetricsByCity = groupBy(data.territory_metrics, "city_id");
+  const territoryMetricsByCity = groupBy(territoryMetricRows, "city_id");
   const enterprisesByCity = groupBy(data.enterprises, "city_id");
   const enterprisesByIndustry = groupBy(data.enterprises, "industry_id");
   let enterpriseMap = null;
@@ -63,7 +73,9 @@
 
   const sourceUsage = new Map(data.data_sources.map((item) => [item.id, new Set()]));
   data.enterprise_sources.forEach((item) => sourceUsage.get(item.source_id)?.add(item.enterprise_id));
-  data.enterprise_metrics.forEach((item) => sourceUsage.get(item.source_id)?.add(item.enterprise_id));
+  (data.metric_values ?? []).forEach((item) => {
+    if (item.enterprise_id !== null) sourceUsage.get(item.source_id)?.add(item.enterprise_id);
+  });
   data.enterprise_products.forEach((item) => sourceUsage.get(item.source_id)?.add(item.enterprise_id));
 
   const normalize = (value) => String(value ?? "")
@@ -141,16 +153,75 @@
     return many;
   };
 
-  const ENTERPRISE_METRIC_CATALOG = [
-    { key: "employees", title: "Сотрудники", format: (value) => formatNumber(value, " чел.") },
-    { key: "revenue", title: "Выручка", format: formatMoney },
-    { key: "net_profit", title: "Чистая прибыль", format: formatMoney },
-    { key: "average_salary", title: "Средняя зарплата", format: formatMoney },
-    { key: "assets", title: "Активы", format: formatMoney },
-    { key: "investments", title: "Инвестиции", format: formatMoney },
-    { key: "taxes_paid", title: "Налоги", format: formatMoney },
-    { key: "production_volume", title: "Объём производства", format: (value) => formatNumber(value) }
+  const metricCatalogByCode = new Map((data.metric_catalog ?? []).map((item) => [item.code, item]));
+  const preferredMetricOrder = [
+    "employees",
+    "revenue",
+    "net_profit",
+    "cost_of_sales",
+    "operating_profit",
+    "profit_before_tax",
+    "assets",
+    "average_salary",
+    "investments",
+    "taxes_paid",
+    "population",
+    "population_city_core",
+    "unemployment_rate"
   ];
+
+  function metricFormatter(unit) {
+    if (unit === "руб.") return formatMoney;
+    if (unit === "руб./мес.") return (value) => `${formatMoney(value)}/мес.`;
+    if (unit === "%") {
+      return (value) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(value)}%`;
+    }
+    if (unit === "чел.") return (value) => formatNumber(value, " чел.");
+    if (unit === "ед.") return (value) => formatNumber(value, " ед.");
+    return (value) => formatNumber(value, unit ? ` ${unit}` : "");
+  }
+
+  function metricAxisFormatter(unit) {
+    if (unit === "руб." || unit === "руб./мес.") return (value) => compactNumberFormat.format(value);
+    if (unit === "%") return (value) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(value)}%`;
+    return (value) => compactNumberFormat.format(value);
+  }
+
+  function buildMetricCatalog(scope, rows) {
+    const available = new Set();
+    rows.forEach((row) => Object.keys(row.metric_meta ?? {}).forEach((code) => available.add(code)));
+    return [...available]
+      .map((code) => metricCatalogByCode.get(code) ?? {
+        code,
+        scope,
+        category: "Прочее",
+        title: code,
+        unit: "",
+        priority: 3
+      })
+      .filter((item) => item.scope === scope)
+      .sort((a, b) => {
+        const preferredA = preferredMetricOrder.indexOf(a.code);
+        const preferredB = preferredMetricOrder.indexOf(b.code);
+        if (preferredA >= 0 || preferredB >= 0) {
+          if (preferredA < 0) return 1;
+          if (preferredB < 0) return -1;
+          return preferredA - preferredB;
+        }
+        return a.priority - b.priority || collator.compare(a.category, b.category) || collator.compare(a.title, b.title);
+      })
+      .map((item) => ({
+        key: item.code,
+        title: item.title,
+        category: item.category,
+        unit: item.unit,
+        format: metricFormatter(item.unit),
+        axisFormat: metricAxisFormatter(item.unit)
+      }));
+  }
+
+  const ENTERPRISE_METRIC_CATALOG = buildMetricCatalog("enterprise", enterpriseMetricRows);
+  const TERRITORY_METRIC_CATALOG = buildMetricCatalog("territory", territoryMetricRows);
 
   function populateSelect(select, items, valueKey, labelKey) {
     const fragment = document.createDocumentFragment();
@@ -172,12 +243,21 @@
 
     const accessDates = data.data_sources.map((item) => item.access_date).filter(Boolean).sort();
     const latestAccess = accessDates.at(-1);
+    const release = [...(data.dataset_releases ?? [])]
+      .sort((a, b) => String(a.release_date).localeCompare(String(b.release_date)))
+      .at(-1);
+    const verifiedPoints = data.client_metadata?.verified_metric_points ?? 0;
+    const pendingPoints = data.client_metadata?.pending_metric_points ?? 0;
     byId("databaseSummary").textContent = `${data.enterprises.length} предприятий · ${data.cities.length} территории`;
-    byId("databaseDate").textContent = latestAccess
-      ? `Источники проверены до ${formatDate(latestAccess)}`
-      : "Дата проверки источников не указана";
-    byId("sourceNote").textContent = latestAccess
-      ? `База собрана из ${data.data_sources.length} открытых источников. Последняя указанная дата доступа — ${formatDate(latestAccess)}. Отсутствующие значения не подменяются демонстрационными цифрами.`
+    byId("databaseDate").textContent = release
+      ? `Данные ${release.release_code} от ${formatDate(release.release_date)}`
+      : latestAccess
+        ? `Источники проверены до ${formatDate(latestAccess)}`
+        : "Дата проверки источников не указана";
+    byId("sourceNote").textContent = release
+      ? `Версия ${release.release_code}: ${numberFormat.format(verifiedPoints)} проверенных значений и ${numberFormat.format(pendingPoints)} наследованных значений, требующих сверки. Использовано ${data.data_sources.length} открытых источника. Пропуски не заменяются нулями или оценками.`
+      : latestAccess
+        ? `База собрана из ${data.data_sources.length} открытых источников. Последняя указанная дата доступа — ${formatDate(latestAccess)}. Отсутствующие значения не подменяются демонстрационными цифрами.`
       : "Все сведения взяты из открытого SQL-дампа. Отсутствующие значения не подменяются демонстрационными цифрами.";
   }
 
@@ -393,7 +473,7 @@
 
   function aggregateEnterpriseMetric(metricKey) {
     const totals = new Map();
-    data.enterprise_metrics.forEach((metric) => {
+    enterpriseMetricRows.forEach((metric) => {
       const value = metric[metricKey];
       if (value === null || value === undefined) return;
       const year = Number(metric.year);
@@ -674,7 +754,8 @@
   function getEnterpriseSourceIds(enterpriseId) {
     return new Set([
       ...(sourceLinksByEnterprise.get(enterpriseId) ?? []).map((item) => item.source_id),
-      ...(metricsByEnterprise.get(enterpriseId) ?? []).map((item) => item.source_id),
+      ...(metricsByEnterprise.get(enterpriseId) ?? []).flatMap((item) => item.source_ids ?? [item.source_id]),
+      ...(metricValuesByEnterprise.get(enterpriseId) ?? []).map((item) => item.source_id),
       ...(productsByEnterprise.get(enterpriseId) ?? []).map((item) => item.source_id)
     ].filter(Boolean));
   }
@@ -683,18 +764,34 @@
     return `<div class="passport-field"><dt>${escapeHtml(label)}</dt><dd>${html ? value : escapeHtml(displayValue(value))}</dd></div>`;
   }
 
+  function verificationMarkup(meta) {
+    if (!meta) return "";
+    const verified = meta.verification_status === "verified";
+    const label = verified ? "проверено" : "требует сверки";
+    const details = [meta.source_detail, meta.note].filter(Boolean).join(". ");
+    return `<span class="metric-verification" data-verification="${verified ? "verified" : "pending"}"${details ? ` title="${escapeHtml(details)}"` : ""}>${label}</span>`;
+  }
+
   function metricChartsMarkup(metrics, catalog) {
     const charts = catalog.map((metric) => {
       const points = metrics
         .filter((item) => item[metric.key] !== null && item[metric.key] !== undefined)
-        .map((item) => ({ year: item.year, value: item[metric.key] }));
+        .map((item) => ({
+          year: item.year,
+          value: item[metric.key],
+          meta: item.metric_meta?.[metric.key]
+        }));
       if (!points.length) return "";
-      const periodLabel = points.length === 1
+      const yearsLabel = points.length === 1
         ? "1 год в базе"
         : `${points.length} ${points.length < 5 ? "года" : "лет"} в базе`;
+      const verifiedCount = points.filter((point) => point.meta?.verification_status === "verified").length;
+      const periodLabel = verifiedCount
+        ? `${yearsLabel} · проверено ${verifiedCount}`
+        : `${yearsLabel} · требуется сверка`;
       return `
         <article class="metric-chart-panel">
-          <header><div><h4>${escapeHtml(metric.title)}</h4><p>${periodLabel}</p></div></header>
+          <header><div><h4>${escapeHtml(metric.title)}</h4><p>${escapeHtml(metric.category)} · ${periodLabel}</p></div></header>
           ${lineChartMarkup(points, {
             title: metric.title,
             formatValue: metric.format,
@@ -721,7 +818,10 @@
               ${[...metrics].sort((a, b) => b.year - a.year).map((item) => `
                 <tr>
                   <td>${item.year}</td>
-                  ${activeMetrics.map((metric) => `<td>${item[metric.key] === null || item[metric.key] === undefined ? "—" : escapeHtml(metric.format(item[metric.key]))}</td>`).join("")}
+                  ${activeMetrics.map((metric) => {
+                    const value = item[metric.key];
+                    return `<td>${value === null || value === undefined ? "—" : `${escapeHtml(metric.format(value))}${verificationMarkup(item.metric_meta?.[metric.key])}`}</td>`;
+                  }).join("")}
                 </tr>
               `).join("")}
             </tbody>
@@ -913,18 +1013,14 @@
     const enterprises = enterprisesByCity.get(city.id) ?? [];
     const metrics = [...(territoryMetricsByCity.get(city.id) ?? [])].sort((a, b) => a.year - b.year);
     const latestPopulation = metrics.filter((item) => item.population !== null && item.population !== undefined).at(-1);
+    const latestUrbanCore = metrics.filter((item) => item.population_city_core !== null && item.population_city_core !== undefined).at(-1);
     const latestUnemployment = metrics.filter((item) => item.unemployment_rate !== null && item.unemployment_rate !== undefined).at(-1);
-    const sourceIds = [...new Set(metrics.map((item) => item.source_id).filter(Boolean))];
+    const sourceIds = [...new Set([
+      ...metrics.flatMap((item) => item.source_ids ?? [item.source_id]),
+      ...(metricValuesByCity.get(city.id) ?? []).map((item) => item.source_id)
+    ].filter(Boolean))];
     const sources = sourceIds.map((id) => sourcesById.get(id)).filter(Boolean);
-    const territoryCatalog = [
-      { key: "population", title: "Численность населения", format: (value) => formatNumber(value, " чел.") },
-      {
-        key: "unemployment_rate",
-        title: "Уровень безработицы",
-        format: (value) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(value)}%`,
-        axisFormat: (value) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(value)}%`
-      }
-    ];
+    const territoryCatalog = TERRITORY_METRIC_CATALOG;
     const html = `
       <h2 id="passportTitle">${escapeHtml(city.name)}</h2>
       <p class="passport-subtitle">${escapeHtml(city.territory_type || "Территория")} · Оренбургская область</p>
@@ -935,6 +1031,7 @@
         ${fieldMarkup("Административный центр", city.administrative_center)}
         ${fieldMarkup("Предприятия в реестре", enterprises.length)}
         ${fieldMarkup("Последняя численность", latestPopulation ? `${numberFormat.format(latestPopulation.population)} · ${latestPopulation.year}` : null)}
+        ${fieldMarkup("Население городского ядра", latestUrbanCore ? `${numberFormat.format(latestUrbanCore.population_city_core)} · ${latestUrbanCore.year}` : null)}
         ${fieldMarkup("Последняя безработица", latestUnemployment ? `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(latestUnemployment.unemployment_rate)}% · ${latestUnemployment.year}` : null)}
         ${fieldMarkup("Координаты", city.latitude !== null && city.longitude !== null ? `${city.latitude}, ${city.longitude}` : null)}
       </dl>
@@ -947,10 +1044,11 @@
           ${territoryCatalog.map((metric) => {
             const points = metrics
               .filter((item) => item[metric.key] !== null && item[metric.key] !== undefined)
-              .map((item) => ({ year: item.year, value: item[metric.key] }));
+              .map((item) => ({ year: item.year, value: item[metric.key], meta: item.metric_meta?.[metric.key] }));
+            const verifiedCount = points.filter((point) => point.meta?.verification_status === "verified").length;
             return `
               <article class="metric-chart-panel">
-                <header><div><h4>${escapeHtml(metric.title)}</h4><p>${points.length ? `${points.length} значений в базе` : "Нет опубликованных значений"}</p></div></header>
+                <header><div><h4>${escapeHtml(metric.title)}</h4><p>${points.length ? `${escapeHtml(metric.category)} · ${points.length} значений · проверено ${verifiedCount}` : "Нет опубликованных значений"}</p></div></header>
                 ${lineChartMarkup(points, { title: metric.title, formatValue: metric.format, formatAxis: metric.axisFormat })}
               </article>
             `;

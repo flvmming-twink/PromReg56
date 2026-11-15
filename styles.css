@@ -1604,6 +1604,33 @@ select:hover {
   font-size: 12px;
 }
 
+.metric-verification {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 4px 0 0 auto;
+  padding: 2px 6px;
+  border: 1px solid var(--steel-2);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.metric-verification[data-verification="verified"] {
+  border-color: #9ac6b0;
+  background: #eef8f2;
+  color: #245f45;
+}
+
+.metric-verification[data-verification="pending"] {
+  border-color: #e2c69d;
+  background: #fff8ec;
+  color: #7b5324;
+}
+
 .metric-chart-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

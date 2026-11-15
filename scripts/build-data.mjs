@@ -6,6 +6,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sqlPath = join(root, "database", "industrial_city_db.sql");
 const outputPath = join(root, "data.js");
 const sql = readFileSync(sqlPath, "utf8");
+const schemaVersion = Math.max(
+  1,
+  ...[...sql.matchAll(/PromRegion56 v(\d+)/gi)].map((match) => Number(match[1]))
+);
 
 const numericColumns = new Set([
   "id",
@@ -42,7 +46,13 @@ const numericColumns = new Set([
   "industrial_enterprises_count",
   "verified_fact_rows",
   "official_municipal_rows",
-  "source_count_new"
+  "source_count_new",
+  "priority_order",
+  "identity_source_id",
+  "duplicate_candidate_id",
+  "verified_values",
+  "verified_revenue_years",
+  "newest_verified_year"
 ]);
 
 const booleanColumns = new Set([
@@ -251,10 +261,66 @@ for (const match of sql.matchAll(/UPDATE\s+public\.data_sources\s+SET\s+publicat
   if (source) source.publication_date = match[1];
 }
 
+for (const match of sql.matchAll(/UPDATE\s+public\.enterprises\s+SET\s+inn=COALESCE\(inn,([^)]+)\),\s*ogrn=COALESCE\(ogrn,([^)]+)\)\s+WHERE\s+id=(\d+);/gi)) {
+  const enterprise = data.enterprises.find((row) => row.id === Number(match[3]));
+  if (!enterprise) continue;
+  if (enterprise.inn === null || enterprise.inn === undefined) enterprise.inn = parseSqlLiteral(match[1]);
+  if (enterprise.ogrn === null || enterprise.ogrn === undefined) enterprise.ogrn = parseSqlLiteral(match[2]);
+}
+
+for (const match of sql.matchAll(/UPDATE\s+public\.enterprises\s+SET\s+status='([^']+)'\s+WHERE\s+id=(\d+)\s+AND\s+status='([^']+)';/gi)) {
+  const enterprise = data.enterprises.find((row) => row.id === Number(match[2]));
+  if (enterprise?.status === match[3]) enterprise.status = match[1];
+}
+
+data.enterprise_research_status = schemaVersion >= 3
+  ? data.enterprises.map((enterprise) => ({
+      enterprise_id: enterprise.id,
+      priority_order: enterprise.city_id === 1 ? 1 : 2,
+      identification_status: "unreviewed",
+      evidence_level: "legacy_only",
+      identity_source_id: null,
+      duplicate_candidate_id: null,
+      review_note: enterprise.city_id === 1
+        ? "Новотроицк: первоочередная ручная сверка юридического лица и отчетности"
+        : "Остальная Оренбургская область: следующий этап; данные из v2 сохранены",
+      reviewed_at: null,
+      last_checked_at: null
+    }))
+  : [];
+
+for (const match of sql.matchAll(/UPDATE\s+public\.enterprise_research_status\s+SET\s+([\s\S]*?)\s+WHERE\s+enterprise_id=(\d+);/gi)) {
+  const status = data.enterprise_research_status.find((row) => row.enterprise_id === Number(match[2]));
+  if (!status) continue;
+  splitSqlList(match[1]).forEach((assignment) => {
+    const parts = assignment.match(/^([a-z_]+)\s*=\s*([\s\S]+)$/i);
+    if (!parts) return;
+    status[parts[1]] = coerce(parts[1], parseSqlLiteral(parts[2]));
+  });
+}
+
 data.metric_catalog = upsertBy([], insertedRows.get("metric_catalog") ?? [], (row) => row.code);
 data.data_quality_issues = upsertBy([], insertedRows.get("data_quality_issues") ?? [], (row) => row.issue_key);
 data.dataset_releases = upsertBy([], insertedRows.get("dataset_releases") ?? [], (row) => row.release_code);
 data.enterprise_product_output = insertedRows.get("enterprise_product_output") ?? [];
+
+if (schemaVersion >= 3 && !data.dataset_releases.some((row) => String(row.release_code).startsWith("v3-"))) {
+  const releaseDate = data.data_sources
+    .map((row) => row.access_date)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  if (!releaseDate) throw new Error("Cannot infer the v3 release date from data sources");
+  data.dataset_releases.push({
+    release_code: `v3-${releaseDate}`,
+    release_date: releaseDate,
+    description: "Полный пакет v3: расширение проверенных показателей Новотроицка, стартовый набор Орска и муниципальная статистика Новотроицка.",
+    verified_fact_rows: 0,
+    official_municipal_rows: 0,
+    source_count_new: data.data_sources.filter((row) => row.id >= 1101).length,
+    imported_legacy_verified: true
+  });
+}
 
 let nextMetricValueId = 1;
 let metricOrder = 0;
@@ -290,7 +356,11 @@ function addMetricValue(row, replace = false) {
 
   const existingIndex = metricValues.findIndex((item) => metricValueKey(item) === metricValueKey(normalized));
   if (existingIndex >= 0) {
-    if (replace) metricValues[existingIndex] = { ...metricValues[existingIndex], ...normalized };
+    const existing = metricValues[existingIndex];
+    const mayReplace = replace === "if-unverified"
+      ? existing.verification_status !== "verified"
+      : replace;
+    if (mayReplace) metricValues[existingIndex] = { ...existing, ...normalized };
     return;
   }
   metricValues.push(normalized);
@@ -363,7 +433,9 @@ metricValues.forEach((row) => {
   }
 });
 
-for (const row of insertedRows.get("metric_values") ?? []) addMetricValue(row, true);
+// Последующие SQL-релизы не заменяют уже проверенную точку: это повторяет
+// условие WHERE metric_values.verification_status <> 'verified' из пакета v3.
+for (const row of insertedRows.get("metric_values") ?? []) addMetricValue(row, "if-unverified");
 
 data.metric_values = metricValues
   .map(({ _order, ...row }) => row)
@@ -442,11 +514,57 @@ data.territory_metric_view = pivotMetrics(
   "city_id"
 );
 
+const cityById = new Map(data.cities.map((city) => [city.id, city]));
+const researchStatusByEnterprise = new Map(
+  data.enterprise_research_status.map((status) => [status.enterprise_id, status])
+);
+data.enterprise_research_queue = data.enterprises.map((enterprise) => {
+  const status = researchStatusByEnterprise.get(enterprise.id) ?? {};
+  const verified = data.metric_values.filter((row) => (
+    row.enterprise_id === enterprise.id && row.verification_status === "verified"
+  ));
+  const revenueYears = new Set(
+    verified.filter((row) => row.metric_code === "revenue").map((row) => row.period_year)
+  );
+  return {
+    enterprise_id: enterprise.id,
+    enterprise_name: enterprise.name,
+    city_name: cityById.get(enterprise.city_id)?.name ?? null,
+    region: cityById.get(enterprise.city_id)?.region ?? null,
+    priority_order: status.priority_order ?? null,
+    identification_status: status.identification_status ?? null,
+    duplicate_candidate_id: status.duplicate_candidate_id ?? null,
+    verified_values: verified.length,
+    verified_revenue_years: revenueYears.size,
+    newest_verified_year: verified.length ? Math.max(...verified.map((row) => row.period_year)) : null
+  };
+}).sort((a, b) => (
+  (a.priority_order ?? 99) - (b.priority_order ?? 99)
+  || String(a.city_name).localeCompare(String(b.city_name), "ru")
+  || String(a.enterprise_name).localeCompare(String(b.enterprise_name), "ru")
+));
+
+const activeRelease = [...data.dataset_releases]
+  .sort((a, b) => (
+    String(a.release_date).localeCompare(String(b.release_date))
+    || String(a.release_code).localeCompare(String(b.release_code))
+  ))
+  .at(-1);
+if (activeRelease && schemaVersion >= 3) {
+  activeRelease.verified_fact_rows = data.metric_values.filter((row) => row.verification_status === "verified").length;
+  activeRelease.official_municipal_rows = data.metric_values.filter((row) => (
+    row.city_id !== null && row.verification_status === "verified" && row.source_id === 1127
+  )).length;
+}
+
 const release = [...data.dataset_releases]
-  .sort((a, b) => String(a.release_date).localeCompare(String(b.release_date)))
+  .sort((a, b) => (
+    String(a.release_date).localeCompare(String(b.release_date))
+    || String(a.release_code).localeCompare(String(b.release_code))
+  ))
   .at(-1) ?? null;
 data.client_metadata = {
-  schema_version: 2,
+  schema_version: schemaVersion,
   release_code: release?.release_code ?? null,
   release_date: release?.release_date ?? null,
   verified_metric_points: data.metric_values.filter((row) => row.verification_status === "verified").length,
@@ -454,14 +572,21 @@ data.client_metadata = {
   generated_at: release?.release_date ? `${release.release_date}T00:00:00.000Z` : null
 };
 
-const requiredV2Tables = ["metric_catalog", "metric_values", "metric_value_sources", "data_quality_issues", "dataset_releases"];
-for (const table of requiredV2Tables) {
-  if (!data[table]) throw new Error(`v2 table not built: ${table}`);
+const requiredTables = [
+  "metric_catalog",
+  "metric_values",
+  "metric_value_sources",
+  "data_quality_issues",
+  "dataset_releases",
+  ...(schemaVersion >= 3 ? ["enterprise_research_status", "enterprise_research_queue"] : [])
+];
+for (const table of requiredTables) {
+  if (!data[table]) throw new Error(`v${schemaVersion} table not built: ${table}`);
 }
 
 writeFileSync(outputPath, `window.PROMREGION_DATA=${JSON.stringify(data)};\n`, "utf8");
 
-for (const table of [...baseTables, ...requiredV2Tables]) {
+for (const table of [...baseTables, ...requiredTables]) {
   console.log(`${table}: ${data[table].length}`);
 }
 console.log(`enterprise_metric_view: ${data.enterprise_metric_view.length}`);

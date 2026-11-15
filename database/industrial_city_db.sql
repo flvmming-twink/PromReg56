@@ -2455,3 +2455,296 @@ COMMIT;
 -- SELECT * FROM public.v2_metric_coverage ORDER BY verified_points DESC;
 -- SELECT * FROM public.v2_sources_explorer ORDER BY metric_values_count DESC;
 -- SELECT * FROM public.data_quality_issues WHERE resolution_status='open';
+
+-- PromRegion56 v3: verified-first Novotroitsk expansion, then Orsk starter set.
+-- APPLY AFTER promregion56_v2_full.sql; non-destructive; intended for PostgreSQL 18.
+-- Sources marked "secondary" reproduce open government financial data; verify primary signed files before formal publication.
+BEGIN;
+CREATE TABLE IF NOT EXISTS public.enterprise_research_status (
+ enterprise_id integer PRIMARY KEY REFERENCES public.enterprises(id) ON DELETE CASCADE,
+ priority_order smallint NOT NULL, identification_status varchar(30) NOT NULL DEFAULT 'unreviewed',
+ evidence_level varchar(40) NOT NULL DEFAULT 'legacy_only',
+ identity_source_id integer REFERENCES public.data_sources(id),
+ duplicate_candidate_id integer REFERENCES public.enterprises(id),
+ review_note text, reviewed_at date,
+ last_checked_at date);
+INSERT INTO public.enterprise_research_status(enterprise_id,priority_order,identification_status,evidence_level,review_note)
+SELECT e.id, CASE WHEN e.city_id=1 THEN 1 ELSE 2 END,'unreviewed','legacy_only',
+CASE WHEN e.city_id=1 THEN 'Новотроицк: первоочередная ручная сверка юридического лица и отчетности' ELSE 'Остальная Оренбургская область: следующий этап; данные из v2 сохранены' END
+FROM public.enterprises e ON CONFLICT (enterprise_id) DO NOTHING;
+INSERT INTO public.data_sources(id,name,url,source_type,publication_date,access_date,description) VALUES
+(1101,'ООО «Новотроицкий содовый завод», РБК Компании, результаты 2025','https://companies.rbc.ru/id/1185658000637-ooo-novotroitskij-sodovyij-zavod/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025 2110, 2120, 2100, 2400, сопоставимая 2024 выручка'),
+(1102,'ООО «Новотроицкий содовый завод», официальный сайт','https://nspltd.ru/company/','Официальный сайт предприятия',NULL,'2026-11-15','Реальное производство с 2019 года, введённые линии и продукция'),
+(1103,'ООО «АККЕРМАНН ЦЕМЕНТ», бухгалтерская отчетность до 2023, РБК','https://companies.rbc.ru/id/1025600822510-ooo-yuzhno-uralskaya-gorno-pererabatyivayuschaya-kompaniya/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2023: 2110, 2120, 2100, 2400; 2022 2110; последующие годы публично отсутствуют'),
+(1104,'ООО «Металекс», официальный сайт: реквизиты','https://metal-x.ru/company/detail.php','Официальный сайт предприятия',NULL,'2026-11-15','Подтверждено ИНН 5607011852, ОГРН 1025600820630, адрес'),
+(1105,'ООО «Металекс», финансовая карточка Точка','https://check.tochka.com/company/1025600820630/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2021: выручка 1 541 823 000, чистая прибыль 400 036 000'),
+(1106,'ООО «НЗНТО», републикация отчётности ФНС 2025','https://e-ecolog.ru/buh/2025/5607142100','Републикация отчетности ФНС / вторичный',NULL,'2026-11-15','2025 и 2024: формы 2, строки 2110, 2120, 2100, 2200, 2300, 2400'),
+(1107,'ООО «Новохром», РБК Компании','https://companies.rbc.ru/id/1025600820365-ooo-novohrom/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025: выручка, себестоимость, валовая и чистая прибыль; 2024 сопоставимая выручка'),
+(1108,'ООО «Новохром», Фирмотека (кадры)','https://firmoteka.ru/5607014758','Агрегатор сведений ФНС / вторичный',NULL,'2026-11-15','Среднесписочная численность 74 чел. за 2025 год'),
+(1109,'ООО «НЗБП», РБК Компании','https://companies.rbc.ru/id/1215600008942-obschestvo-s-ogranichennoj-otvetstvennostyu-novotroitskij-zavod-bisulfita-i-pirosulfita/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025: выручка, себестоимость, чистая прибыль; выручка 2024'),
+(1110,'ООО «НЗБП», руИНН: численность','https://ruinn.ru/company/5607144115-ooo-nzbp','Агрегатор реестровых сведений ФНС / вторичный',NULL,'2026-11-15','39 чел. в 2025 году'),
+(1111,'ООО «Поддон Сервис», републикация отчётности ФНС 2025','https://e-ecolog.ru/buh/2025/5607143440','Републикация отчетности ФНС / вторичный',NULL,'2026-11-15','2025–2024 бухгалтерский баланс, отчет о финансовых результатах'),
+(1112,'ООО «Поддон Сервис», РБК Компании','https://companies.rbc.ru/id/1195658018907-obschestvo-s-ogranichennoj-otvetstvennostyu-poddon-servis/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025 чистый убыток, численность 25 работников; финансовые строки сверены с 1111'),
+(1113,'ООО «НЗЦМ», републикация отчётности ФНС 2025','https://e-ecolog.ru/buh/2025/5607143640','Републикация отчетности ФНС / вторичный',NULL,'2026-11-15','2025 и 2024: строки 2110, 2120, 2100, 2200, 2300, 2400'),
+(1114,'ООО «НЗЦМ», число работников, справочник','https://xfirm.ru/company/5607002135','Агрегатор сведений ФНС / вторичный',NULL,'2026-11-15','Через список связанных организаций: численность 120 человек 2025'),
+(1115,'ООО «Хлебозавод», бухгалтерские показатели 2025','https://synapsenet.ru/organizacii/1155658008505-ooo-hlebozavod','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025: прибыль 8 533 000 руб., изменения выручки; 2025 выручка округлена в источниках'),
+(1116,'ООО «Хлебозавод», Т-Банк','https://www.tbank.ru/business/contractor/legal/1155658008505/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025: выручка ~526,28 млн руб.; точная выручка не подтверждена по источнику 1116'),
+(1117,'АО «НТПЗ», РБК Компании','https://companies.rbc.ru/id/1235600005486-nao-ao-ntpz/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025: выручка 854 627 000 руб., себестоимость, валовой убыток, чистый убыток'),
+(1118,'ООО «Завод Элмон», B2B-подряд','https://vsem-podryad.ru/company/e57f0af3-001f-4a26-bf27-b8e275150433/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025: выручка 1 164 000, убыток -154 000, активы 9 869 000'),
+(1119,'ООО «Завод Элмон», РБК Компании','https://companies.rbc.ru/id/1205600001342-obschestvo-s-ogranichennoj-otvetstvennostyu-zavod-elmon/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2024: выручка, чистая прибыль, себестоимость, балансовые данные'),
+(1120,'ООО «УЗТМ», B2B.house','https://b2b.house/company/OOO-UZTM_8dafc414-9fab-42ee-9241-2e7a8a95fa86/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025 выручка и прибыль, активы; 2024 убыток'),
+(1121,'ООО «НСплав», РБК Компании','https://companies.rbc.ru/id/1165658079718-ooo-nsplav/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025 выручка, себестоимость, валовая прибыль, чистая прибыль'),
+(1122,'ООО «НСплав», РБК финансовая сводка','https://companies.rbc.ru/amp/ogrn/1165658079718/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025 активы, обязательства и собственный капитал'),
+(1123,'ООО «Синтезспирт», РБК Компании','https://companies.rbc.ru/id/1205600011187-obschestvo-s-ogranichennoj-otvetstvennostyu-sintezspirt/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025 выручка, себестоимость, валовая и чистая прибыль; 2024 сопоставимая выручка'),
+(1124,'ООО «Синтезспирт», Фирмотека','https://firmoteka.ru/5614085615','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025 среднесписочная численность 400 чел.'),
+(1125,'АО «Орский машиностроительный завод», XFirm','https://xfirm.ru/company/5613000880','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2021 выручка 6 538 323 000; 2022–2025 публичные значения на странице отсутствуют'),
+(1126,'АО «Орский машиностроительный завод», Т-Банк','https://www.tbank.ru/business/contractor/legal/1025601999400/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2021 чистая прибыль 83,75 млн руб. (округлённо); не включена в точный слой'),
+(1127,'Администрация города Новотроицка: Экономическое развитие, 09.09.2025 № 1579-п','https://base.garant.ru/412707195/e88847e78ccd9fdb54482c7fa15982bf/','Официальный муниципальный нормативный документ',NULL,'2026-11-15','На 01.01.2025: 7 средних, 36 малых, 410 микропредприятий, 1572 ИП, 5406 самозанятых'),
+(1128,'ООО «Новотроицкий содовый завод», 2025 ССЧ и правоотношения','https://zachestnyibiznes.ru/company/report?ogrn=1185658000637&type=total','Агрегатор сведений ФНС / вторичный',NULL,'2026-11-15','Среднесписочная численность за 2025 год 517 чел., за 2024 год 521 чел.'),
+(1129,'ООО «НЗНТО», РБК Компании','https://companies.rbc.ru/id/1175658023705-ooo-novotroitskij-zavod-nestandartnogo-tehnologicheskogo-oborudovaniya/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','Подтверждение ИНН, ОГРН, 2025 финансовые значения'),
+(1130,'АО «Новотроицкий завод хромовых соединений», РБК','https://companies.rbc.ru/id/1025600820431-ao-novotroitskij-zavod-hromovyih-soedinenij/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','ИНН/ОГРН, 2024 выручка 10 673 929 000 руб., прибыль 625 792 000'),
+(1131,'АО «НЦЗ»: финансовый профиль 2025','https://b2b.house/company/AO-NCZ_ab8427ef-6671-403c-a8c4-6f19d3009fcf/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025: выручка 379 426 000, прибыль 19 834 000, 94 работника'),
+(1134,'ООО «Новохром», руИНН, финансовая отчетность 2021–2025','https://ruinn.ru/company/5607014758-ooo-novokhrom','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2021–2025 точные значения: выручка, себестоимость, валовая и чистая прибыль, активы, капитал'),
+(1135,'ООО «НЗЦМ», РБК Компании, финансовая карточка 2025','https://companies.rbc.ru/id/1205600008668-obschestvo-s-ogranichennoj-otvetstvennostyu-novotroitskij-zavod-tsvetnyih-metallov/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2025 численность 77 человек'),
+(1136,'ООО «АККЕРМАНН ЦЕМЕНТ», XFirm, архив выручки 2012–2023','https://xfirm.ru/company/5607015014','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','Выручка 2021 года 12 604 991 000 руб.; 2024 и 2025 финансовая отчетность отсутствует'),
+(1137,'ООО «АККЕРМАНН ЦЕМЕНТ», Inndex, годовая отчетность 2022','https://inndex.ru/ul/novotroitsk/ogrn-1025600822510-a58-ooo-akkermann-tsement','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2022: чистая прибыль 4 472 470 000 руб., валюта баланса 13 029 755 000 руб.'),
+(1132,'ООО «НСЗ», републикация отчётности 2022 / сравнение 2021','https://e-ecolog.ru/buh/2022/5607142213','Републикация отчетности ФНС / вторичный',NULL,'2026-11-15','2022/2021: формы 2, строки 2110,2120,2100,2200,2300,2400'),
+(1133,'ООО «Хлебозавод», РБК Компании, 2024','https://companies.rbc.ru/id/1155658008505-ooo-hlebozavod/','Агрегатор отчетности ФНС / вторичный',NULL,'2026-11-15','2024: 2110, 2120, 2100, 2400')
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name,url=EXCLUDED.url,source_type=EXCLUDED.source_type,access_date=EXCLUDED.access_date,description=EXCLUDED.description;
+SELECT pg_catalog.setval(pg_get_serial_sequence('public.data_sources','id'),(SELECT MAX(id) FROM public.data_sources),true);
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607019523'), ogrn=COALESCE(ogrn,NULL) WHERE id=1;
+UPDATE public.enterprise_research_status SET identification_status='registered',evidence_level='legacy_only',identity_source_id=NULL,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=1;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607141530'), ogrn=COALESCE(ogrn,'1165658079718') WHERE id=2;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1121,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=2;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607142213'), ogrn=COALESCE(ogrn,'1185658000637') WHERE id=3;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1101,review_note='В исходной базе обозначен инвестиционным проектом; официальный сайт подтверждает выпуск продукции. Исходный исторический статус будет исправлен на «Действующее» по результатам сверки.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=3;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607015014'), ogrn=COALESCE(ogrn,'1025600822510') WHERE id=4;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1103,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=4;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607011852'), ogrn=COALESCE(ogrn,'1025600820630') WHERE id=5;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1104,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=5;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607004870'), ogrn=COALESCE(ogrn,'1025600820563') WHERE id=6;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1131,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=6;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607002135'), ogrn=COALESCE(ogrn,'1025600820431') WHERE id=7;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1130,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=7;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607142100'), ogrn=COALESCE(ogrn,'1175658023705') WHERE id=8;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1129,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=8;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607142044'), ogrn=COALESCE(ogrn,NULL) WHERE id=9;
+UPDATE public.enterprise_research_status SET identification_status='registered',evidence_level='legacy_only',identity_source_id=NULL,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=9;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607014758'), ogrn=COALESCE(ogrn,'1025600820365') WHERE id=10;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1107,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=10;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607144115'), ogrn=COALESCE(ogrn,'1215600008942') WHERE id=37;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1109,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=37;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607143440'), ogrn=COALESCE(ogrn,'1195658018907') WHERE id=38;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1112,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=38;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607143640'), ogrn=COALESCE(ogrn,'1205600008668') WHERE id=39;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1113,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=39;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607140262'), ogrn=COALESCE(ogrn,'1155658008505') WHERE id=40;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1115,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=40;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607144789'), ogrn=COALESCE(ogrn,'1235600005486') WHERE id=41;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1117,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=41;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5607143496'), ogrn=COALESCE(ogrn,'1205600001342') WHERE id=42;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1119,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=42;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5614080374'), ogrn=COALESCE(ogrn,'1175658020922') WHERE id=44;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1120,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=44;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5614085615'), ogrn=COALESCE(ogrn,'1205600011187') WHERE id=15;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1123,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=15;
+UPDATE public.enterprises SET inn=COALESCE(inn,'5613000880'), ogrn=COALESCE(ogrn,'1025601999400') WHERE id=16;
+UPDATE public.enterprise_research_status SET identification_status='matched',evidence_level='web_checked',identity_source_id=1125,review_note='Идентификация по ИНН и ОГРН из указанной публичной карточки; официальный ЕГРЮЛ проверить отдельно.',reviewed_at='2026-11-15',last_checked_at='2026-11-15' WHERE enterprise_id=16;
+UPDATE public.enterprise_research_status SET identification_status='duplicate_candidate',evidence_level='name_only',duplicate_candidate_id=5,review_note='Потенциальный дубликат ООО Металекс (ID 5): ни ИНН, ни ОГРН в этой карточке не было. Не переносить цифры на ID 43 до проверки.',reviewed_at='2026-11-15' WHERE enterprise_id=43;
+UPDATE public.enterprises SET status='Действующее' WHERE id=3 AND status='Инвестиционный проект';
+UPDATE public.enterprise_research_status SET identification_status='matched', evidence_level='web_checked', identity_source_id=1102,review_note='Инвестиционный проект реализован: официальный сайт подтверждает осуществляемый выпуск продукции; статус в старой таблице не переписан без отдельной ревизии', reviewed_at='2026-11-15' WHERE enterprise_id=3;
+-- Numeric records: original report value as RUB (convert thous.RUB to RUB), employees as persons.
+INSERT INTO public.metric_values(metric_code,enterprise_id,period_year,value_numeric,source_id,value_kind,verification_status,reporting_scope,precision_kind,source_detail,note) VALUES
+('revenue',2,2025,3516186000,1121,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',2,2025,3117344000,1121,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',2,2025,398842000,1121,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',2,2025,91728000,1121,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',2,2025,3576904000,1122,'reported','verified','legal_entity','exact','Баланс 2025, активы','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('liabilities',2,2025,1101071000,1122,'reported','verified','legal_entity','exact','Баланс 2025, обязательства','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('equity',2,2025,2475833000,1122,'reported','verified','legal_entity','exact','Баланс 2025, капитал','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',3,2025,3155216000,1101,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',3,2025,2985566000,1101,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',3,2025,169650000,1101,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',3,2025,8189000,1101,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('employees',3,2025,517,1128,'reported','verified','legal_entity','exact','ССЧ за 2025 год','Временной период определён по подписи карточки источника.'),
+('revenue',3,2024,1352981000,1101,'reported','verified','legal_entity','exact','Сопоставимая колонка 2024 в отчётности 2025','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('employees',3,2024,521,1128,'reported','verified','legal_entity','exact','ССЧ за 2024 год','Временной период определён по подписи карточки источника.'),
+('revenue',3,2022,1666109000,1132,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',3,2022,1394573000,1132,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',3,2022,271536000,1132,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('operating_profit',3,2022,178856000,1132,'reported','verified','legal_entity','exact','2200','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('profit_before_tax',3,2022,-10128000,1132,'reported','verified','legal_entity','exact','2300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',3,2022,-10128000,1132,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',3,2021,761399000,1132,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',3,2021,1035155000,1132,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',3,2021,-273756000,1132,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('operating_profit',3,2021,-362307000,1132,'reported','verified','legal_entity','exact','2200','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('profit_before_tax',3,2021,-571287000,1132,'reported','verified','legal_entity','exact','2300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',3,2021,-571287000,1132,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',4,2023,15165171000,1103,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',4,2023,4972045000,1103,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',4,2023,10193126000,1103,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',4,2023,6330547000,1103,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',4,2022,13555757000,1103,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',4,2022,4472470000,1137,'reported','verified','legal_entity','exact','Чистая прибыль за 2022 год','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',4,2022,13029755000,1137,'reported','verified','legal_entity','exact','Валюта баланса на конец 2022 года','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',4,2021,12604991000,1136,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',5,2021,1541823000,1105,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',5,2021,400036000,1105,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',8,2025,1118736000,1106,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',8,2025,526913000,1106,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',8,2025,591823000,1106,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('operating_profit',8,2025,520779000,1106,'reported','verified','legal_entity','exact','2200','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('profit_before_tax',8,2025,512027000,1106,'reported','verified','legal_entity','exact','2300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',8,2025,512027000,1106,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',8,2024,486851000,1106,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',8,2024,302207000,1106,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',8,2024,184644000,1106,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('operating_profit',8,2024,93259000,1106,'reported','verified','legal_entity','exact','2200','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('profit_before_tax',8,2024,80184000,1106,'reported','verified','legal_entity','exact','2300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',8,2024,80184000,1106,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',10,2021,1296014000,1134,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',10,2021,701308000,1134,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',10,2021,594706000,1134,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',10,2021,380752000,1134,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',10,2021,1082640000,1134,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('equity',10,2021,998300000,1134,'reported','verified','legal_entity','exact','1300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',10,2022,1154597000,1134,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',10,2022,401410000,1134,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',10,2022,753187000,1134,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',10,2022,651037000,1134,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',10,2022,1513146000,1134,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('equity',10,2022,1416547000,1134,'reported','verified','legal_entity','exact','1300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',10,2023,851777000,1134,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',10,2023,290645000,1134,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',10,2023,561132000,1134,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',10,2023,501506000,1134,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',10,2023,1505961000,1134,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('equity',10,2023,1456725000,1134,'reported','verified','legal_entity','exact','1300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',10,2024,704011000,1134,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',10,2024,270967000,1134,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',10,2024,433044000,1134,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',10,2024,347147000,1134,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',10,2024,1082104000,1134,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('equity',10,2024,1008133000,1134,'reported','verified','legal_entity','exact','1300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('employees',10,2024,80,1108,'reported','verified','legal_entity','exact','ССЧ за 2024 год (разность данных ФНС в публикации)','Временной период определён по подписи карточки источника.'),
+('revenue',10,2025,650283000,1134,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',10,2025,360349000,1134,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',10,2025,289934000,1134,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',10,2025,72229000,1134,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',10,2025,1137070000,1134,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('equity',10,2025,1080362000,1134,'reported','verified','legal_entity','exact','1300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('employees',10,2025,74,1108,'reported','verified','legal_entity','exact','ССЧ за 2025 год','Временной период определён по подписи карточки источника.'),
+('revenue',37,2025,230353000,1109,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',37,2025,209930000,1109,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',37,2025,30936000,1109,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('employees',37,2025,39,1110,'reported','verified','legal_entity','exact','ССЧ за 2025 год','Временной период определён по подписи карточки источника.'),
+('revenue',37,2024,212774000,1109,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',38,2025,62613000,1111,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',38,2025,56813000,1111,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',38,2025,5800000,1111,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('operating_profit',38,2025,-403000,1111,'reported','verified','legal_entity','exact','2200','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('profit_before_tax',38,2025,-3100000,1111,'reported','verified','legal_entity','exact','2300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',38,2025,-2573000,1112,'reported','verified','legal_entity','exact','Чистая прибыль/убыток 2025','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',38,2025,55928000,1111,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('accounts_receivable',38,2025,8845000,1111,'reported','verified','legal_entity','exact','1230','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('accounts_payable',38,2025,6928000,1111,'reported','verified','legal_entity','exact','1520','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',38,2024,62323000,1111,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',38,2024,53008000,1111,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',38,2024,9315000,1111,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('operating_profit',38,2024,3650000,1111,'reported','verified','legal_entity','exact','2200','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('profit_before_tax',38,2024,204000,1111,'reported','verified','legal_entity','exact','2300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',38,2024,57638000,1111,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',39,2025,239915000,1113,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',39,2025,271120000,1113,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',39,2025,-31205000,1113,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('operating_profit',39,2025,-73873000,1113,'reported','verified','legal_entity','exact','2200','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('profit_before_tax',39,2025,-74353000,1113,'reported','verified','legal_entity','exact','2300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',39,2025,-74353000,1113,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('employees',39,2025,77,1135,'reported','verified','legal_entity','exact','ССЧ за 2025 год, РБК Компании','Временной период определён по подписи карточки источника.'),
+('revenue',39,2024,217739000,1113,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',39,2024,161186000,1113,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',39,2024,56553000,1113,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('operating_profit',39,2024,-22416000,1113,'reported','verified','legal_entity','exact','2200','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('profit_before_tax',39,2024,376000,1113,'reported','verified','legal_entity','exact','2300','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',39,2024,376000,1113,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',40,2025,8533000,1115,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',40,2024,490129000,1133,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',40,2024,12714000,1133,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',40,2024,321833000,1133,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',40,2024,168296000,1133,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',41,2025,854627000,1117,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',41,2025,968105000,1117,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',41,2025,-113478000,1117,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',41,2025,-869766000,1117,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',42,2025,1164000,1118,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',42,2025,-154000,1118,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',42,2025,9869000,1118,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',42,2024,4086000,1119,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',42,2024,3882000,1119,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',42,2024,204000,1119,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',44,2025,30019000,1120,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',44,2025,4528000,1120,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('assets',44,2025,18657000,1120,'reported','verified','legal_entity','exact','1600','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',44,2024,-281000,1120,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',15,2025,2265803000,1123,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('cost_of_sales',15,2025,1463083000,1123,'reported','verified','legal_entity','exact','2120','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('gross_profit',15,2025,802720000,1123,'reported','verified','legal_entity','exact','2100','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('net_profit',15,2025,174011000,1123,'reported','verified','legal_entity','exact','2400','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('employees',15,2025,400,1124,'reported','verified','legal_entity','exact','ССЧ за 2025 год','Временной период определён по подписи карточки источника.'),
+('revenue',15,2024,3177173000,1123,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.'),
+('revenue',16,2021,6538323000,1125,'reported','verified','legal_entity','exact','2110','Воспроизведение опубликованных данных; исходный подписанный отчет ФНС дополнительно проверить.')
+ON CONFLICT (enterprise_id,metric_code,period_year,reporting_scope) WHERE enterprise_id IS NOT NULL DO UPDATE SET value_numeric=EXCLUDED.value_numeric,source_id=EXCLUDED.source_id,source_detail=EXCLUDED.source_detail,verification_status='verified',value_kind='reported',precision_kind='exact',note=EXCLUDED.note,updated_at=now() WHERE public.metric_values.verification_status <> 'verified';
+INSERT INTO public.metric_value_sources(metric_value_id,source_id,source_role,section_or_page)
+SELECT mv.id,mv.source_id,'value_evidence',mv.source_detail FROM public.metric_values mv
+WHERE mv.verification_status='verified' AND mv.source_id BETWEEN 1101 AND 1133
+ON CONFLICT(metric_value_id,source_id) DO NOTHING;
+INSERT INTO public.metric_catalog(code,scope,category,title,unit,priority,definition) VALUES ('medium_enterprises','territory','Предпринимательство','Средние предприятия','ед.',2,'Количество средних предприятий на 01.01.2025, без малых, микро и ИП') ON CONFLICT(code) DO NOTHING;
+INSERT INTO public.metric_catalog(code,scope,category,title,unit,priority,definition) VALUES ('small_enterprises','territory','Предпринимательство','Малые предприятия','ед.',2,'Количество малых предприятий на 01.01.2025, без микро и ИП') ON CONFLICT(code) DO NOTHING;
+INSERT INTO public.metric_catalog(code,scope,category,title,unit,priority,definition) VALUES ('micro_enterprises','territory','Предпринимательство','Микропредприятия','ед.',2,'Количество микропредприятий на 01.01.2025, без ИП') ON CONFLICT(code) DO NOTHING;
+INSERT INTO public.metric_catalog(code,scope,category,title,unit,priority,definition) VALUES ('individual_entrepreneurs','territory','Предпринимательство','Индивидуальные предприниматели','чел.',2,'Количество ИП на 01.01.2025') ON CONFLICT(code) DO NOTHING;
+INSERT INTO public.metric_catalog(code,scope,category,title,unit,priority,definition) VALUES ('self_employed_registered','territory','Предпринимательство','Самозанятые нарастающим итогом','чел.',2,'Зарегистрированные плательщики НПД на 01.01.2025, включает физических лиц и ИП; нельзя суммировать с числом ИП') ON CONFLICT(code) DO NOTHING;
+INSERT INTO public.metric_values(metric_code,city_id,period_year,value_numeric,source_id,value_kind,verification_status,reporting_scope,precision_kind,measurement_date,source_detail,note) VALUES
+('medium_enterprises',1,2025,7,1127,'reported','verified','municipality','exact','2025-01-01','Постановление № 1579-п от 09.09.2025, срез на 01.01.2025','Общий зарегистрированный бизнес, не число только промышленных предприятий'),
+('small_enterprises',1,2025,36,1127,'reported','verified','municipality','exact','2025-01-01','Постановление № 1579-п от 09.09.2025, срез на 01.01.2025','Общий зарегистрированный бизнес, не число только промышленных предприятий'),
+('micro_enterprises',1,2025,410,1127,'reported','verified','municipality','exact','2025-01-01','Постановление № 1579-п от 09.09.2025, срез на 01.01.2025','Общий зарегистрированный бизнес, не число только промышленных предприятий'),
+('individual_entrepreneurs',1,2025,1572,1127,'reported','verified','municipality','exact','2025-01-01','Постановление № 1579-п от 09.09.2025, срез на 01.01.2025','Общий зарегистрированный бизнес, не число только промышленных предприятий'),
+('self_employed_registered',1,2025,5406,1127,'reported','verified','municipality','exact','2025-01-01','Постановление № 1579-п от 09.09.2025, срез на 01.01.2025','Общий зарегистрированный бизнес, не число только промышленных предприятий')
+ON CONFLICT (city_id,metric_code,period_year,reporting_scope) WHERE city_id IS NOT NULL DO UPDATE SET value_numeric=EXCLUDED.value_numeric,source_id=EXCLUDED.source_id,verification_status='verified',measurement_date=EXCLUDED.measurement_date,source_detail=EXCLUDED.source_detail,precision_kind='exact' WHERE public.metric_values.verification_status <> 'verified';
+INSERT INTO public.metric_values(metric_code,city_id,period_year,value_numeric,source_id,value_kind,verification_status,reporting_scope,precision_kind,measurement_date,source_detail,note) VALUES
+('population',1,2025,78871,1127,'reported','verified','municipality','exact','2025-01-01','Численность населения муниципального образования на 01.01.2025','Официальная муниципальная программа; указан охват территориального показателя'),
+('average_salary_territory',1,2024,'74255.2',1127,'reported','verified','municipality','exact',NULL,'Средняя зарплата работников крупных и средних организаций, опубликована на 01.01.2025','Официальная муниципальная программа; указан охват территориального показателя'),
+('industrial_output',1,2024,194799010000,1127,'reported','verified','municipality','exact',NULL,'Объём отгрузки продукции крупных и средних промышленных предприятий за 2024','Официальная муниципальная программа; указан охват территориального показателя'),
+('retail_turnover',1,2024,10010240000,1127,'reported','verified','municipality','exact',NULL,'Оборот розничной торговли крупных и средних предприятий за 2024','Официальная муниципальная программа; указан охват территориального показателя'),
+('registered_unemployed',1,2025,140,1127,'reported','verified','municipality','exact','2025-01-01','Зарегистрированные безработные на 01.01.2025','Официальная муниципальная программа; указан охват территориального показателя'),
+('registered_unemployment_rate',1,2025,'0.3',1127,'reported','verified','municipality','exact','2025-01-01','Уровень зарегистрированной безработицы на 01.01.2025; не МОТ','Официальная муниципальная программа; указан охват территориального показателя')
+ON CONFLICT (city_id,metric_code,period_year,reporting_scope) WHERE city_id IS NOT NULL DO UPDATE SET value_numeric=EXCLUDED.value_numeric,source_id=EXCLUDED.source_id,verification_status='verified',measurement_date=EXCLUDED.measurement_date,source_detail=EXCLUDED.source_detail,precision_kind='exact' WHERE public.metric_values.verification_status <> 'verified';
+INSERT INTO public.metric_value_sources(metric_value_id,source_id,source_role,section_or_page) SELECT id,1127,'official_municipal_program',source_detail FROM public.metric_values WHERE city_id=1 AND source_id=1127 AND verification_status='verified' ON CONFLICT(metric_value_id,source_id) DO NOTHING;
+-- Legacy compatibility: keep all old rows but replace stale approximations when a verified exact value exists. Full provenance stays in metric_values.
+WITH agg AS (SELECT enterprise_id,period_year,
+MAX(value_numeric) FILTER(WHERE metric_code='revenue') revenue,MAX(value_numeric) FILTER(WHERE metric_code='net_profit') net_profit,
+MAX(value_numeric) FILTER(WHERE metric_code='employees') employees,MAX(value_numeric) FILTER(WHERE metric_code='assets') assets,MIN(source_id) FILTER(WHERE metric_code='revenue') revenue_source
+FROM public.metric_values WHERE verification_status='verified' AND reporting_scope='legal_entity' AND enterprise_id IS NOT NULL GROUP BY 1,2)
+INSERT INTO public.enterprise_metrics(enterprise_id,year,revenue,net_profit,employees,assets,source_id) SELECT a.enterprise_id,a.period_year,a.revenue,a.net_profit,a.employees::integer,a.assets,a.revenue_source FROM agg a WHERE a.revenue IS NOT NULL AND NOT EXISTS
+ (SELECT 1 FROM public.enterprise_metrics x WHERE x.enterprise_id=a.enterprise_id AND x.year=a.period_year);
+WITH agg AS (SELECT enterprise_id,period_year,
+MAX(value_numeric) FILTER(WHERE metric_code='revenue') revenue,MAX(value_numeric) FILTER(WHERE metric_code='net_profit') net_profit,
+MAX(value_numeric) FILTER(WHERE metric_code='employees') employees,MAX(value_numeric) FILTER(WHERE metric_code='assets') assets
+FROM public.metric_values WHERE verification_status='verified' AND reporting_scope='legal_entity' AND enterprise_id IS NOT NULL GROUP BY 1,2)
+UPDATE public.enterprise_metrics em SET revenue=COALESCE(a.revenue,em.revenue),net_profit=COALESCE(a.net_profit,em.net_profit),employees=COALESCE(a.employees::integer,em.employees),assets=COALESCE(a.assets,em.assets) FROM agg a WHERE em.enterprise_id=a.enterprise_id AND em.year=a.period_year AND
+ ((a.revenue IS NOT NULL AND em.revenue IS DISTINCT FROM a.revenue) OR (a.net_profit IS NOT NULL AND em.net_profit IS DISTINCT FROM a.net_profit) OR (a.employees IS NOT NULL AND em.employees IS DISTINCT FROM a.employees::integer) OR (a.assets IS NOT NULL AND em.assets IS DISTINCT FROM a.assets));
+CREATE OR REPLACE VIEW public.v3_enterprise_research_queue AS
+SELECT e.id AS enterprise_id,e.name AS enterprise_name,c.name AS city_name,c.region,rs.priority_order,rs.identification_status,rs.duplicate_candidate_id,
+COUNT(DISTINCT mv.id) FILTER(WHERE mv.verification_status='verified') AS verified_values,
+COUNT(DISTINCT mv.period_year) FILTER(WHERE mv.verification_status='verified' AND mv.metric_code='revenue') AS verified_revenue_years,
+MAX(mv.period_year) FILTER(WHERE mv.verification_status='verified') AS newest_verified_year
+FROM public.enterprises e JOIN public.cities c ON c.id=e.city_id
+LEFT JOIN public.enterprise_research_status rs ON rs.enterprise_id=e.id
+LEFT JOIN public.metric_values mv ON mv.enterprise_id=e.id
+GROUP BY e.id,e.name,c.name,c.region,rs.priority_order,rs.identification_status,rs.duplicate_candidate_id;
+CREATE OR REPLACE VIEW public.v3_verified_provenance AS
+SELECT e.id AS enterprise_id,e.name,c.name AS city_name, mv.period_year, mv.metric_code, mc.title AS metric_title, mv.value_numeric,mc.unit,
+mv.precision_kind,mv.verification_status,mv.source_detail,src.name AS source_name,src.url AS source_url,src.source_type
+FROM public.metric_values mv JOIN public.enterprises e ON e.id=mv.enterprise_id JOIN public.cities c ON c.id=e.city_id JOIN public.metric_catalog mc ON mc.code=mv.metric_code LEFT JOIN public.data_sources src ON src.id=mv.source_id
+WHERE mv.verification_status='verified';
+COMMIT;

@@ -244,7 +244,10 @@
     const accessDates = data.data_sources.map((item) => item.access_date).filter(Boolean).sort();
     const latestAccess = accessDates.at(-1);
     const release = [...(data.dataset_releases ?? [])]
-      .sort((a, b) => String(a.release_date).localeCompare(String(b.release_date)))
+      .sort((a, b) => (
+        String(a.release_date).localeCompare(String(b.release_date))
+        || String(a.release_code).localeCompare(String(b.release_code))
+      ))
       .at(-1);
     const verifiedPoints = data.client_metadata?.verified_metric_points ?? 0;
     const pendingPoints = data.client_metadata?.pending_metric_points ?? 0;

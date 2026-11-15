@@ -67,6 +67,11 @@
   const territoryMetricsByCity = groupBy(territoryMetricRows, "city_id");
   const enterprisesByCity = groupBy(data.enterprises, "city_id");
   const enterprisesByIndustry = groupBy(data.enterprises, "industry_id");
+  const identityByEnterprise = new Map(
+    (data.v4_entity_identity ?? []).map((item) => [item.enterprise_id, item])
+  );
+  const qualityIssuesByEnterprise = groupBy(data.v4_quality_issues ?? [], "enterprise_id");
+  const periodObservationsByCity = groupBy(data.v4_period_observations ?? [], "city_id");
   let enterpriseMap = null;
   let mapMarkersLayer = null;
   const mapMarkersByEnterprise = new Map();
@@ -142,6 +147,26 @@
     if (value.includes("действ")) return "active";
     if (value.includes("проект")) return "project";
     return "neutral";
+  };
+  const identityStatusLabels = {
+    matched_by_inn: "Сопоставлено по ИНН",
+    branch_identity_pending: "Филиал — требуется отдельная проверка",
+    not_researched_in_detail: "Подробная проверка не проводилась",
+    ambiguous_identity: "Карточка требует уточнения"
+  };
+  const entityKindLabels = {
+    legal_entity: "Юридическое лицо",
+    branch: "Филиал",
+    unreviewed: "Тип записи не проверен"
+  };
+  const qualityIssueTitles = {
+    conflicting_net_profit_2024: "Расхождение прибыли за 2024 год",
+    legacy_revenue_rounding: "Уточнение ранее округлённой выручки",
+    legal_address_moved: "Юридический адрес изменён",
+    registration_moved: "Регистрация перенесена",
+    city_scope_mismatch: "Территориальная привязка требует проверки",
+    ambiguous_inn: "Неоднозначная идентификация организации",
+    workforce_source_difference: "Источники расходятся по численности"
   };
 
   const pluralize = (value, one, few, many) => {
@@ -258,7 +283,7 @@
         ? `Источники проверены до ${formatDate(latestAccess)}`
         : "Дата проверки источников не указана";
     byId("sourceNote").textContent = release
-      ? `Версия ${release.release_code}: ${numberFormat.format(verifiedPoints)} проверенных значений и ${numberFormat.format(pendingPoints)} наследованных значений, требующих сверки. Использовано ${data.data_sources.length} открытых источника. Пропуски не заменяются нулями или оценками.`
+      ? `Версия ${release.release_code}: ${numberFormat.format(verifiedPoints)} проверенных значений и ${numberFormat.format(pendingPoints)} значений со статусом «требует сверки». Использовано ${data.data_sources.length} открытых источников. Пропуски не заменяются нулями или оценками.`
       : latestAccess
         ? `База собрана из ${data.data_sources.length} открытых источников. Последняя указанная дата доступа — ${formatDate(latestAccess)}. Отсутствующие значения не подменяются демонстрационными цифрами.`
       : "Все сведения взяты из открытого SQL-дампа. Отсутствующие значения не подменяются демонстрационными цифрами.";
@@ -921,6 +946,8 @@
     const metrics = [...(metricsByEnterprise.get(enterprise.id) ?? [])].sort((a, b) => a.year - b.year);
     const products = productsByEnterprise.get(enterprise.id) ?? [];
     const projects = projectsByEnterprise.get(enterprise.id) ?? [];
+    const identity = identityByEnterprise.get(enterprise.id);
+    const qualityIssues = qualityIssuesByEnterprise.get(enterprise.id) ?? [];
     const sourceIds = getEnterpriseSourceIds(enterprise.id);
     const sources = [...sourceIds].map((id) => sourcesById.get(id)).filter(Boolean);
 
@@ -947,6 +974,8 @@
         ${fieldMarkup("ИНН", enterprise.inn)}
         ${fieldMarkup("ОГРН", enterprise.ogrn)}
         ${fieldMarkup("ОКВЭД", enterprise.okved)}
+        ${fieldMarkup("Тип записи", identity ? entityKindLabels[identity.entity_kind] ?? identity.entity_kind : null)}
+        ${fieldMarkup("Проверка карточки", identity ? identityStatusLabels[identity.identity_status] ?? identity.identity_status : null)}
         ${fieldMarkup("Роль в экономике", enterprise.economic_role)}
         ${fieldMarkup("Адрес", enterprise.address)}
         ${fieldMarkup("Сайт", websiteMarkup, true)}
@@ -958,6 +987,28 @@
         <h3>О предприятии</h3>
         <p class="passport-description">${escapeHtml(displayValue(enterprise.activity_description))}</p>
       </section>
+
+      ${identity?.location_note ? `
+        <section class="passport-section">
+          <h3>Привязка данных</h3>
+          <p class="passport-description">${escapeHtml(identity.location_note)}</p>
+        </section>
+      ` : ""}
+
+      ${qualityIssues.length ? `
+        <section class="passport-section">
+          <h3>Ограничения и проверки</h3>
+          <ul class="passport-list">
+            ${qualityIssues.map((issue) => {
+              const evidenceUrl = safeUrl(issue.evidence_url);
+              const evidence = evidenceUrl
+                ? ` · <a href="${escapeHtml(evidenceUrl)}" target="_blank" rel="noreferrer">проверить источник</a>`
+                : "";
+              return `<li><strong>${escapeHtml(qualityIssueTitles[issue.problem_code] ?? "Требуется проверка данных")}</strong><span>${escapeHtml(issue.details)}${evidence}</span></li>`;
+            }).join("")}
+          </ul>
+        </section>
+      ` : ""}
 
       <section class="passport-section">
         <h3>Продукция</h3>
@@ -1015,12 +1066,15 @@
     if (!city) return;
     const enterprises = enterprisesByCity.get(city.id) ?? [];
     const metrics = [...(territoryMetricsByCity.get(city.id) ?? [])].sort((a, b) => a.year - b.year);
+    const periodObservations = [...(periodObservationsByCity.get(city.id) ?? [])]
+      .sort((a, b) => String(a.period_from).localeCompare(String(b.period_from)));
     const latestPopulation = metrics.filter((item) => item.population !== null && item.population !== undefined).at(-1);
     const latestUrbanCore = metrics.filter((item) => item.population_city_core !== null && item.population_city_core !== undefined).at(-1);
     const latestUnemployment = metrics.filter((item) => item.unemployment_rate !== null && item.unemployment_rate !== undefined).at(-1);
     const sourceIds = [...new Set([
       ...metrics.flatMap((item) => item.source_ids ?? [item.source_id]),
-      ...(metricValuesByCity.get(city.id) ?? []).map((item) => item.source_id)
+      ...(metricValuesByCity.get(city.id) ?? []).map((item) => item.source_id),
+      ...periodObservations.map((item) => item.source_id)
     ].filter(Boolean))];
     const sources = sourceIds.map((id) => sourcesById.get(id)).filter(Boolean);
     const territoryCatalog = TERRITORY_METRIC_CATALOG;
@@ -1058,6 +1112,24 @@
           }).join("")}
         </div>
       </section>
+      ${periodObservations.length ? `
+        <section class="passport-section">
+          <div class="passport-section-heading">
+            <h3>Показатели с точным периодом</h3>
+            <p>Эти значения не смешиваются с годовыми рядами, если охватывают неполный год или конкретную дату.</p>
+          </div>
+          <ul class="passport-list">
+            ${periodObservations.map((item) => {
+              const metric = metricCatalogByCode.get(item.metric_code);
+              const value = metricFormatter(metric?.unit)(item.numeric_value);
+              const period = item.period_from === item.period_to
+                ? formatDate(item.period_from)
+                : `${formatDate(item.period_from)} — ${formatDate(item.period_to)}`;
+              return `<li><strong>${escapeHtml(metric?.title ?? item.metric_code)}: ${escapeHtml(value)}</strong><span>${escapeHtml(period)} · ${escapeHtml(item.coverage_note)}</span></li>`;
+            }).join("")}
+          </ul>
+        </section>
+      ` : ""}
       <section class="passport-section territory-actions">
         <button class="secondary-action" type="button" data-show-city-enterprises="${city.id}">Открыть предприятия территории</button>
       </section>

@@ -31,6 +31,7 @@ const numericColumns = new Set([
   "taxes_paid",
   "production_volume",
   "value_numeric",
+  "numeric_value",
   "latitude",
   "longitude",
   "foundation_year",
@@ -174,7 +175,7 @@ function readTuple(text, startIndex) {
 
 function parseValueInserts(text) {
   const inserts = [];
-  const pattern = /INSERT\s+INTO\s+(?:public\.)?([a-z_]+)\s*(?:\(([^)]*)\))?\s*VALUES\b/gim;
+  const pattern = /INSERT\s+INTO\s+(?:public\.)?([a-z][a-z0-9_]*)\s*(?:\(([^)]*)\))?\s*VALUES\b/gim;
 
   for (const match of text.matchAll(pattern)) {
     const table = match[1];
@@ -206,7 +207,7 @@ function parseValueInserts(text) {
 }
 
 const data = {};
-const copyBlock = /^COPY public\.([a-z_]+) \(([^)]+)\) FROM stdin;\r?\n([\s\S]*?)\r?\n\\\.$/gm;
+const copyBlock = /^COPY public\.([a-z][a-z0-9_]*) \(([^)]+)\) FROM stdin;\r?\n([\s\S]*?)\r?\n\\\.$/gm;
 
 for (const match of sql.matchAll(copyBlock)) {
   const [, table, columnList, rows] = match;
@@ -254,6 +255,17 @@ function upsertBy(rows, incoming, key) {
   return rows;
 }
 
+function insertMissingBy(rows, incoming, key) {
+  const keys = new Set(rows.map(key));
+  incoming.forEach((row) => {
+    const rowKey = key(row);
+    if (keys.has(rowKey)) return;
+    keys.add(rowKey);
+    rows.push(row);
+  });
+  return rows;
+}
+
 upsertBy(data.data_sources, insertedRows.get("data_sources") ?? [], (row) => row.id);
 
 for (const match of sql.matchAll(/UPDATE\s+public\.data_sources\s+SET\s+publication_date='([^']+)'\s+WHERE\s+id=(\d+);/gi)) {
@@ -266,6 +278,22 @@ for (const match of sql.matchAll(/UPDATE\s+public\.enterprises\s+SET\s+inn=COALE
   if (!enterprise) continue;
   if (enterprise.inn === null || enterprise.inn === undefined) enterprise.inn = parseSqlLiteral(match[1]);
   if (enterprise.ogrn === null || enterprise.ogrn === undefined) enterprise.ogrn = parseSqlLiteral(match[2]);
+}
+
+for (const match of sql.matchAll(/UPDATE\s+public\.enterprises\s+SET\s+inn='([^']+)'\s+WHERE\s+id=(\d+)\s+AND\s+inn\s+IS\s+NULL;/gi)) {
+  const enterprise = data.enterprises.find((row) => row.id === Number(match[2]));
+  if (enterprise && (enterprise.inn === null || enterprise.inn === undefined)) enterprise.inn = match[1];
+}
+
+for (const match of sql.matchAll(/UPDATE\s+public\.enterprises\s+SET\s+entity_type='([^']+)'\s+WHERE\s+id\s+IN\s*\(([^)]+)\)\s+AND\s+\(entity_type\s+IS\s+NULL\s+OR\s+entity_type='([^']+)'\);/gi)) {
+  const ids = match[2].split(",").map((value) => Number(value.trim()));
+  data.enterprises
+    .filter((enterprise) => ids.includes(enterprise.id))
+    .forEach((enterprise) => {
+      if (enterprise.entity_type === null || enterprise.entity_type === undefined || enterprise.entity_type === match[3]) {
+        enterprise.entity_type = match[1];
+      }
+    });
 }
 
 for (const match of sql.matchAll(/UPDATE\s+public\.enterprises\s+SET\s+status='([^']+)'\s+WHERE\s+id=(\d+)\s+AND\s+status='([^']+)';/gi)) {
@@ -299,25 +327,56 @@ for (const match of sql.matchAll(/UPDATE\s+public\.enterprise_research_status\s+
   });
 }
 
-data.metric_catalog = upsertBy([], insertedRows.get("metric_catalog") ?? [], (row) => row.code);
+data.v4_entity_identity = upsertBy([], insertedRows.get("v4_entity_identity") ?? [], (row) => row.enterprise_id);
+data.v4_quality_issues = upsertBy(
+  [],
+  (insertedRows.get("v4_quality_issues") ?? []).map((row, index) => ({
+    id: row.id ?? index + 1,
+    review_status: row.review_status ?? "open",
+    ...row
+  })),
+  (row) => `${row.enterprise_id}|${row.problem_code}`
+);
+data.v4_period_observations = upsertBy(
+  [],
+  (insertedRows.get("v4_period_observations") ?? []).map((row, index) => ({ id: row.id ?? index + 1, ...row })),
+  (row) => `${row.city_id}|${row.period_from}|${row.period_to}|${row.metric_code}|${row.coverage_note}`
+);
+
+data.metric_catalog = insertMissingBy([], insertedRows.get("metric_catalog") ?? [], (row) => row.code);
 data.data_quality_issues = upsertBy([], insertedRows.get("data_quality_issues") ?? [], (row) => row.issue_key);
 data.dataset_releases = upsertBy([], insertedRows.get("dataset_releases") ?? [], (row) => row.release_code);
 data.enterprise_product_output = insertedRows.get("enterprise_product_output") ?? [];
 
-if (schemaVersion >= 3 && !data.dataset_releases.some((row) => String(row.release_code).startsWith("v3-"))) {
-  const releaseDate = data.data_sources
-    .map((row) => row.access_date)
-    .filter(Boolean)
-    .sort()
-    .at(-1);
-  if (!releaseDate) throw new Error("Cannot infer the v3 release date from data sources");
+const inferredReleaseDefinitions = [
+  {
+    version: 3,
+    firstSourceId: 1101,
+    lastSourceId: 2199,
+    description: "Полный пакет v3: расширение проверенных показателей Новотроицка, стартовый набор Орска и муниципальная статистика Новотроицка."
+  },
+  {
+    version: 4,
+    firstSourceId: 2201,
+    lastSourceId: 2999,
+    description: "Полный пакет v4: финансовые ряды предприятий Орска и Оренбурга, идентификация карточек, предупреждения качества и показатели с точным периодом наблюдения."
+  }
+];
+
+for (const definition of inferredReleaseDefinitions.filter((item) => item.version <= schemaVersion)) {
+  if (data.dataset_releases.some((row) => String(row.release_code).startsWith(`v${definition.version}-`))) continue;
+  const releaseSources = data.data_sources.filter((row) => (
+    row.id >= definition.firstSourceId && row.id <= definition.lastSourceId
+  ));
+  const releaseDate = releaseSources.map((row) => row.access_date).filter(Boolean).sort().at(-1);
+  if (!releaseDate) throw new Error(`Cannot infer the v${definition.version} release date from data sources`);
   data.dataset_releases.push({
-    release_code: `v3-${releaseDate}`,
+    release_code: `v${definition.version}-${releaseDate}`,
     release_date: releaseDate,
-    description: "Полный пакет v3: расширение проверенных показателей Новотроицка, стартовый набор Орска и муниципальная статистика Новотроицка.",
+    description: definition.description,
     verified_fact_rows: 0,
     official_municipal_rows: 0,
-    source_count_new: data.data_sources.filter((row) => row.id >= 1101).length,
+    source_count_new: releaseSources.length,
     imported_legacy_verified: true
   });
 }
@@ -544,6 +603,85 @@ data.enterprise_research_queue = data.enterprises.map((enterprise) => {
   || String(a.enterprise_name).localeCompare(String(b.enterprise_name), "ru")
 ));
 
+const identityByEnterprise = new Map(
+  data.v4_entity_identity.map((identity) => [identity.enterprise_id, identity])
+);
+data.v4_city_enterprise_coverage = data.enterprises
+  .filter((enterprise) => enterprise.city_id === 2 || enterprise.city_id === 3)
+  .map((enterprise) => {
+    const city = cityById.get(enterprise.city_id);
+    const identity = identityByEnterprise.get(enterprise.id) ?? {};
+    const verified = data.metric_values.filter((row) => (
+      row.enterprise_id === enterprise.id
+      && row.reporting_scope === "legal_entity"
+      && row.verification_status === "verified"
+    ));
+    const revenueYears = new Set(
+      verified.filter((row) => row.metric_code === "revenue").map((row) => row.period_year)
+    );
+    return {
+      city: city?.name ?? null,
+      enterprise_id: enterprise.id,
+      enterprise: enterprise.name,
+      researched_inn: identity.researched_inn ?? null,
+      entity_kind: identity.entity_kind ?? null,
+      identity_status: identity.identity_status ?? null,
+      location_note: identity.location_note ?? null,
+      available_verified_values: verified.length,
+      years_of_revenue: revenueYears.size,
+      latest_year: verified.length ? Math.max(...verified.map((row) => row.period_year)) : null
+    };
+  })
+  .sort((a, b) => (
+    String(a.city ?? "").localeCompare(String(b.city ?? ""), "ru")
+    || String(a.enterprise ?? "").localeCompare(String(b.enterprise ?? ""), "ru")
+  ));
+
+const enterpriseById = new Map(data.enterprises.map((enterprise) => [enterprise.id, enterprise]));
+const catalogByCode = new Map(data.metric_catalog.map((metric) => [metric.code, metric]));
+const sourceById = new Map(data.data_sources.map((source) => [source.id, source]));
+data.v4_city_financial_evidence = data.metric_values
+  .filter((row) => {
+    const enterprise = enterpriseById.get(row.enterprise_id);
+    return enterprise
+      && (enterprise.city_id === 2 || enterprise.city_id === 3)
+      && row.reporting_scope === "legal_entity"
+      && row.verification_status === "verified";
+  })
+  .map((row) => {
+    const enterprise = enterpriseById.get(row.enterprise_id);
+    const metric = catalogByCode.get(row.metric_code);
+    const source = sourceById.get(row.source_id);
+    return {
+      city: cityById.get(enterprise.city_id)?.name ?? null,
+      enterprise_id: enterprise.id,
+      enterprise: enterprise.name,
+      inn: enterprise.inn,
+      period_year: row.period_year,
+      metric_code: row.metric_code,
+      title: metric?.title ?? row.metric_code,
+      value_numeric: row.value_numeric,
+      unit: metric?.unit ?? "",
+      precision_kind: row.precision_kind,
+      verification_status: row.verification_status,
+      source_name: source?.name ?? null,
+      source_url: source?.url ?? null,
+      source_type: source?.source_type ?? null,
+      source_detail: row.source_detail
+    };
+  });
+
+const verifiedMetricValues = data.metric_values.filter((row) => row.verification_status === "verified");
+const v3Release = data.dataset_releases.find((row) => String(row.release_code).startsWith("v3-"));
+if (v3Release) {
+  v3Release.verified_fact_rows = verifiedMetricValues.filter((row) => (
+    row.source_id === null || row.source_id < 2201
+  )).length;
+  v3Release.official_municipal_rows = verifiedMetricValues.filter((row) => (
+    row.city_id !== null && row.source_id === 1127
+  )).length;
+}
+
 const activeRelease = [...data.dataset_releases]
   .sort((a, b) => (
     String(a.release_date).localeCompare(String(b.release_date))
@@ -551,10 +689,10 @@ const activeRelease = [...data.dataset_releases]
   ))
   .at(-1);
 if (activeRelease && schemaVersion >= 3) {
-  activeRelease.verified_fact_rows = data.metric_values.filter((row) => row.verification_status === "verified").length;
-  activeRelease.official_municipal_rows = data.metric_values.filter((row) => (
-    row.city_id !== null && row.verification_status === "verified" && row.source_id === 1127
-  )).length;
+  activeRelease.verified_fact_rows = verifiedMetricValues.length;
+  activeRelease.official_municipal_rows = schemaVersion >= 4
+    ? data.v4_period_observations.length
+    : verifiedMetricValues.filter((row) => row.city_id !== null && row.source_id === 1127).length;
 }
 
 const release = [...data.dataset_releases]
@@ -578,7 +716,14 @@ const requiredTables = [
   "metric_value_sources",
   "data_quality_issues",
   "dataset_releases",
-  ...(schemaVersion >= 3 ? ["enterprise_research_status", "enterprise_research_queue"] : [])
+  ...(schemaVersion >= 3 ? ["enterprise_research_status", "enterprise_research_queue"] : []),
+  ...(schemaVersion >= 4 ? [
+    "v4_entity_identity",
+    "v4_quality_issues",
+    "v4_period_observations",
+    "v4_city_enterprise_coverage",
+    "v4_city_financial_evidence"
+  ] : [])
 ];
 for (const table of requiredTables) {
   if (!data[table]) throw new Error(`v${schemaVersion} table not built: ${table}`);

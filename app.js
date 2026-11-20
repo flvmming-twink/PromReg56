@@ -72,6 +72,7 @@
   );
   const qualityIssuesByEnterprise = groupBy(data.v4_quality_issues ?? [], "enterprise_id");
   const periodObservationsByCity = groupBy(data.v4_period_observations ?? [], "city_id");
+  const cityAnnualIndicatorsByCity = groupBy(data.city_annual_indicators ?? [], "city_id");
   let enterpriseMap = null;
   let mapMarkersLayer = null;
   const mapMarkersByEnterprise = new Map();
@@ -168,6 +169,21 @@
     ambiguous_inn: "Неоднозначная идентификация организации",
     workforce_source_difference: "Источники расходятся по численности"
   };
+  const cityIndicatorTitles = {
+    average_salary: "Средняя зарплата",
+    housing_completed: "Ввод жилья",
+    industrial_production_index: "Индекс промышленного производства",
+    industrial_shipments: "Промышленная отгрузка",
+    investments: "Инвестиции в основной капитал",
+    manufacturing_shipments: "Отгрузка обрабатывающих производств",
+    municipal_budget_expenses: "Расходы бюджета",
+    municipal_budget_revenue: "Доходы бюджета",
+    population: "Население",
+    profitable_organizations_profit: "Прибыль прибыльных организаций",
+    registered_unemployment: "Зарегистрированная безработица",
+    retail_turnover: "Оборот розничной торговли",
+    sme_count: "Субъекты малого и среднего бизнеса"
+  };
 
   const pluralize = (value, one, few, many) => {
     const number = Math.abs(Number(value));
@@ -198,6 +214,12 @@
   function metricFormatter(unit) {
     if (unit === "руб.") return formatMoney;
     if (unit === "руб./мес.") return (value) => `${formatMoney(value)}/мес.`;
+    if (unit === "млн руб.") return (value) => `${numberFormat.format(value)} млн ₽`;
+    if (unit === "млрд руб.") return (value) => `${numberFormat.format(value)} млрд ₽`;
+    if (unit === "тыс. руб.") return (value) => `${numberFormat.format(value)} тыс. ₽`;
+    if (unit === "тыс. чел.") return (value) => `${numberFormat.format(value)} тыс. чел.`;
+    if (unit === "тыс. кв. м") return (value) => `${numberFormat.format(value)} тыс. м²`;
+    if (unit === "кв. м") return (value) => `${numberFormat.format(value)} м²`;
     if (unit === "%") {
       return (value) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(value)}%`;
     }
@@ -208,6 +230,11 @@
 
   function metricAxisFormatter(unit) {
     if (unit === "руб." || unit === "руб./мес.") return (value) => compactNumberFormat.format(value);
+    if (unit === "млн руб.") return (value) => `${compactNumberFormat.format(value)} млн`;
+    if (unit === "млрд руб.") return (value) => `${compactNumberFormat.format(value)} млрд`;
+    if (unit === "тыс. руб." || unit === "тыс. чел." || unit === "тыс. кв. м") {
+      return (value) => `${compactNumberFormat.format(value)} тыс.`;
+    }
     if (unit === "%") return (value) => `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(value)}%`;
     return (value) => compactNumberFormat.format(value);
   }
@@ -276,6 +303,7 @@
       .at(-1);
     const verifiedPoints = data.client_metadata?.verified_metric_points ?? 0;
     const pendingPoints = data.client_metadata?.pending_metric_points ?? 0;
+    const detailedCityIndicators = data.client_metadata?.detailed_city_indicators ?? 0;
     byId("databaseSummary").textContent = `${data.enterprises.length} предприятий · ${data.cities.length} территории`;
     byId("databaseDate").textContent = release
       ? `Данные ${release.release_code} от ${formatDate(release.release_date)}`
@@ -283,7 +311,7 @@
         ? `Источники проверены до ${formatDate(latestAccess)}`
         : "Дата проверки источников не указана";
     byId("sourceNote").textContent = release
-      ? `Версия ${release.release_code}: ${numberFormat.format(verifiedPoints)} проверенных значений и ${numberFormat.format(pendingPoints)} значений со статусом «требует сверки». Использовано ${data.data_sources.length} открытых источников. Пропуски не заменяются нулями или оценками.`
+      ? `Версия ${release.release_code}: ${numberFormat.format(verifiedPoints)} проверенных значений, ${numberFormat.format(pendingPoints)} значений со статусом «требует сверки» и ${numberFormat.format(detailedCityIndicators)} детальных муниципальных наблюдений. Использовано ${data.data_sources.length} открытых источников. Пропуски не заменяются нулями.`
       : latestAccess
         ? `База собрана из ${data.data_sources.length} открытых источников. Последняя указанная дата доступа — ${formatDate(latestAccess)}. Отсутствующие значения не подменяются демонстрационными цифрами.`
       : "Все сведения взяты из открытого SQL-дампа. Отсутствующие значения не подменяются демонстрационными цифрами.";
@@ -1068,13 +1096,21 @@
     const metrics = [...(territoryMetricsByCity.get(city.id) ?? [])].sort((a, b) => a.year - b.year);
     const periodObservations = [...(periodObservationsByCity.get(city.id) ?? [])]
       .sort((a, b) => String(a.period_from).localeCompare(String(b.period_from)));
+    const cityIndicators = [...(cityAnnualIndicatorsByCity.get(city.id) ?? [])]
+      .sort((a, b) => a.year - b.year || collator.compare(a.metric_code, b.metric_code));
+    const cityIndicatorCatalog = [...new Map(cityIndicators.map((item) => [item.metric_code, {
+      code: item.metric_code,
+      title: cityIndicatorTitles[item.metric_code] ?? item.source_metric_name,
+      unit: item.unit
+    }])).values()].sort((a, b) => collator.compare(a.title, b.title));
     const latestPopulation = metrics.filter((item) => item.population !== null && item.population !== undefined).at(-1);
     const latestUrbanCore = metrics.filter((item) => item.population_city_core !== null && item.population_city_core !== undefined).at(-1);
     const latestUnemployment = metrics.filter((item) => item.unemployment_rate !== null && item.unemployment_rate !== undefined).at(-1);
     const sourceIds = [...new Set([
       ...metrics.flatMap((item) => item.source_ids ?? [item.source_id]),
       ...(metricValuesByCity.get(city.id) ?? []).map((item) => item.source_id),
-      ...periodObservations.map((item) => item.source_id)
+      ...periodObservations.map((item) => item.source_id),
+      ...cityIndicators.map((item) => item.source_id)
     ].filter(Boolean))];
     const sources = sourceIds.map((id) => sourcesById.get(id)).filter(Boolean);
     const territoryCatalog = TERRITORY_METRIC_CATALOG;
@@ -1112,6 +1148,48 @@
           }).join("")}
         </div>
       </section>
+      ${cityIndicatorCatalog.length ? `
+        <section class="passport-section passport-section-analytics">
+          <div class="passport-section-heading">
+            <h3>Детальные показатели 2021–2025</h3>
+            <p>Отчётные значения и муниципальные оценки показаны с исходным охватом и не подменяют друг друга.</p>
+          </div>
+          <div class="metric-chart-grid">
+            ${cityIndicatorCatalog.map((metric) => {
+              const rows = cityIndicators.filter((item) => item.metric_code === metric.code);
+              const points = rows
+                .filter((item) => item.numeric_value !== null && item.numeric_value !== undefined)
+                .map((item) => ({
+                  year: item.year,
+                  value: item.numeric_value,
+                  meta: {
+                    verification_status: item.verification_status === "reported" ? "verified" : "pending",
+                    source_id: item.source_id,
+                    source_detail: item.source_metric_name,
+                    measurement_date: item.as_of_date,
+                    note: item.coverage_note || (item.verification_status === "municipal_estimate" ? "Муниципальная оценка" : "Отчётное значение")
+                  }
+                }));
+              const reported = rows.filter((item) => item.verification_status === "reported").length;
+              const estimated = rows.filter((item) => item.verification_status === "municipal_estimate").length;
+              const statusText = [
+                reported ? `отчётных: ${reported}` : "",
+                estimated ? `оценок: ${estimated}` : ""
+              ].filter(Boolean).join(" · ");
+              return `
+                <article class="metric-chart-panel">
+                  <header><div><h4>${escapeHtml(metric.title)}</h4><p>${escapeHtml(statusText || "Нет опубликованных значений")}</p></div></header>
+                  ${lineChartMarkup(points, {
+                    title: metric.title,
+                    formatValue: metricFormatter(metric.unit),
+                    formatAxis: metricAxisFormatter(metric.unit)
+                  })}
+                </article>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      ` : ""}
       ${periodObservations.length ? `
         <section class="passport-section">
           <div class="passport-section-heading">

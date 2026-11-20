@@ -1,11 +1,19 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sqlPath = join(root, "database", "industrial_city_db.sql");
+const migrationPaths = [
+  join(root, "database", "migrations", "city_cards_2021_2025.sql"),
+  join(root, "database", "migrations", "fill_seven_city_gaps.sql"),
+  join(root, "database", "migrations", "remove_duplicate_metalex.sql")
+];
 const outputPath = join(root, "data.js");
-const sql = readFileSync(sqlPath, "utf8");
+const sql = [sqlPath, ...migrationPaths]
+  .filter((path) => existsSync(path))
+  .map((path) => readFileSync(path, "utf8"))
+  .join("\n\n");
 const schemaVersion = Math.max(
   1,
   ...[...sql.matchAll(/PromRegion56 v(\d+)/gi)].map((match) => Number(match[1]))
@@ -64,6 +72,16 @@ const booleanColumns = new Set([
 ]);
 
 const insertedTableColumns = {
+  _incoming_city_metrics: [
+    "city_id",
+    "year",
+    "population",
+    "average_salary",
+    "unemployment_rate",
+    "investments",
+    "industrial_output",
+    "source_id"
+  ],
   dataset_releases: [
     "release_code",
     "release_date",
@@ -175,7 +193,7 @@ function readTuple(text, startIndex) {
 
 function parseValueInserts(text) {
   const inserts = [];
-  const pattern = /INSERT\s+INTO\s+(?:public\.)?([a-z][a-z0-9_]*)\s*(?:\(([^)]*)\))?\s*VALUES\b/gim;
+  const pattern = /INSERT\s+INTO\s+(?:public\.)?([a-z_][a-z0-9_]*)\s*(?:\(([^)]*)\))?\s*VALUES\b/gim;
 
   for (const match of text.matchAll(pattern)) {
     const table = match[1];
@@ -206,8 +224,25 @@ function parseValueInserts(text) {
   return inserts;
 }
 
+function parseTupleBlock(text, columns) {
+  const rows = [];
+  let cursor = 0;
+  while (cursor < text.length) {
+    const start = text.indexOf("(", cursor);
+    if (start < 0) break;
+    const tuple = readTuple(text, start);
+    const values = splitSqlList(tuple.content).map(parseSqlLiteral);
+    if (values.length !== columns.length) {
+      throw new Error(`Tuple block: expected ${columns.length} values, got ${values.length}`);
+    }
+    rows.push(Object.fromEntries(columns.map((column, index) => [column, coerce(column, values[index])] )));
+    cursor = tuple.endIndex;
+  }
+  return rows;
+}
+
 const data = {};
-const copyBlock = /^COPY public\.([a-z][a-z0-9_]*) \(([^)]+)\) FROM stdin;\r?\n([\s\S]*?)\r?\n\\\.$/gm;
+const copyBlock = /^COPY public\.([a-z_][a-z0-9_]*) \(([^)]+)\) FROM stdin;\r?\n([\s\S]*?)\r?\n\\\.$/gm;
 
 for (const match of sql.matchAll(copyBlock)) {
   const [, table, columnList, rows] = match;
@@ -239,6 +274,34 @@ const insertedRows = new Map();
 for (const insert of parseValueInserts(sql)) {
   if (!insertedRows.has(insert.table)) insertedRows.set(insert.table, []);
   insertedRows.get(insert.table).push(...insert.rows);
+}
+
+const cityMetadataPattern = /WITH\s+incoming\(id,region,district,latitude,longitude,territory_type,oktmo,administrative_center\)\s+AS\s*\(\s*VALUES\s*([\s\S]*?)\s*\)\s*UPDATE\s+public\.cities/gi;
+for (const match of sql.matchAll(cityMetadataPattern)) {
+  const incoming = parseTupleBlock(match[1], [
+    "id",
+    "region",
+    "district",
+    "latitude",
+    "longitude",
+    "territory_type",
+    "oktmo",
+    "administrative_center"
+  ]);
+  upsertBy(data.cities, incoming, (row) => row.id);
+}
+
+let nextTerritoryMetricId = Math.max(0, ...data.territory_metrics.map((row) => row.id)) + 1;
+for (const incoming of insertedRows.get("_incoming_city_metrics") ?? []) {
+  const existing = data.territory_metrics.find((row) => (
+    row.city_id === incoming.city_id && row.year === incoming.year
+  ));
+  if (existing) {
+    Object.assign(existing, incoming);
+  } else {
+    data.territory_metrics.push({ id: nextTerritoryMetricId, ...incoming });
+    nextTerritoryMetricId += 1;
+  }
 }
 
 function upsertBy(rows, incoming, key) {
@@ -301,6 +364,25 @@ for (const match of sql.matchAll(/UPDATE\s+public\.enterprises\s+SET\s+status='(
   if (enterprise?.status === match[3]) enterprise.status = match[1];
 }
 
+if (sql.includes("Удаление дублирующей записи ООО «МЕТАЛЕКС» (id=43)")) {
+  const duplicate = data.enterprises.find((row) => row.id === 43);
+  const keeper = data.enterprises.find((row) => row.id === 5);
+  const isConfirmedDuplicate = duplicate
+    && keeper
+    && (duplicate.inn === null || duplicate.inn === keeper.inn)
+    && keeper.inn === "5607011852"
+    && duplicate.city_id === keeper.city_id
+    && duplicate.industry_id === keeper.industry_id
+    && String(duplicate.name).toLocaleUpperCase("ru-RU").includes("МЕТАЛЕКС")
+    && String(keeper.name).toLocaleUpperCase("ru-RU").includes("МЕТАЛЕКС");
+  if (isConfirmedDuplicate) {
+    data.enterprises = data.enterprises.filter((row) => row.id !== duplicate.id);
+    data.enterprise_metrics = data.enterprise_metrics.filter((row) => row.enterprise_id !== duplicate.id);
+    data.enterprise_products = data.enterprise_products.filter((row) => row.enterprise_id !== duplicate.id);
+    data.enterprise_sources = data.enterprise_sources.filter((row) => row.enterprise_id !== duplicate.id);
+  }
+}
+
 data.enterprise_research_status = schemaVersion >= 3
   ? data.enterprises.map((enterprise) => ({
       enterprise_id: enterprise.id,
@@ -342,6 +424,40 @@ data.v4_period_observations = upsertBy(
   (insertedRows.get("v4_period_observations") ?? []).map((row, index) => ({ id: row.id ?? index + 1, ...row })),
   (row) => `${row.city_id}|${row.period_from}|${row.period_to}|${row.metric_code}|${row.coverage_note}`
 );
+data.city_annual_indicators = upsertBy(
+  [],
+  insertedRows.get("city_annual_indicators") ?? [],
+  (row) => `${row.city_id}|${row.year}|${row.metric_code}`
+);
+
+function normalizeCityIndicatorValue(row) {
+  if (row.numeric_value === null || row.numeric_value === undefined) return null;
+  const multipliers = {
+    "млн руб.": 1_000_000,
+    "млрд руб.": 1_000_000_000,
+    "тыс. руб.": 1_000,
+    "тыс. чел.": 1_000,
+    "тыс. кв. м": 1_000
+  };
+  return Number(row.numeric_value) * (multipliers[row.unit] ?? 1);
+}
+
+const cityIndicatorTerritoryFields = {
+  population: "population",
+  average_salary: "average_salary",
+  registered_unemployment: "unemployment_rate",
+  investments: "investments",
+  industrial_shipments: "industrial_output"
+};
+for (const indicator of data.city_annual_indicators) {
+  const field = cityIndicatorTerritoryFields[indicator.metric_code];
+  const value = normalizeCityIndicatorValue(indicator);
+  if (!field || value === null) continue;
+  const territoryMetric = data.territory_metrics.find((row) => (
+    row.city_id === indicator.city_id && row.year === indicator.year
+  ));
+  if (territoryMetric) territoryMetric[field] = value;
+}
 
 data.metric_catalog = insertMissingBy([], insertedRows.get("metric_catalog") ?? [], (row) => row.code);
 data.data_quality_issues = upsertBy([], insertedRows.get("data_quality_issues") ?? [], (row) => row.issue_key);
@@ -360,6 +476,12 @@ const inferredReleaseDefinitions = [
     firstSourceId: 2201,
     lastSourceId: 2999,
     description: "Полный пакет v4: финансовые ряды предприятий Орска и Оренбурга, идентификация карточек, предупреждения качества и показатели с точным периодом наблюдения."
+  },
+  {
+    version: 5,
+    firstSourceId: 362,
+    lastSourceId: 369,
+    description: "Карточки Новотроицка, Орска и Оренбурга за 2021–2025 годы: 140 детальных муниципальных показателей, методы расчёта и отметки сопоставимости."
   }
 ];
 
@@ -494,7 +616,11 @@ metricValues.forEach((row) => {
 
 // Последующие SQL-релизы не заменяют уже проверенную точку: это повторяет
 // условие WHERE metric_values.verification_status <> 'verified' из пакета v3.
-for (const row of insertedRows.get("metric_values") ?? []) addMetricValue(row, "if-unverified");
+const validEnterpriseIds = new Set(data.enterprises.map((row) => row.id));
+for (const row of insertedRows.get("metric_values") ?? []) {
+  if (row.enterprise_id !== null && row.enterprise_id !== undefined && !validEnterpriseIds.has(row.enterprise_id)) continue;
+  addMetricValue(row, "if-unverified");
+}
 
 data.metric_values = metricValues
   .map(({ _order, ...row }) => row)
@@ -675,11 +801,19 @@ const verifiedMetricValues = data.metric_values.filter((row) => row.verification
 const v3Release = data.dataset_releases.find((row) => String(row.release_code).startsWith("v3-"));
 if (v3Release) {
   v3Release.verified_fact_rows = verifiedMetricValues.filter((row) => (
-    row.source_id === null || row.source_id < 2201
+    row.source_id === null || (row.source_id < 2201 && (row.source_id < 362 || row.source_id > 369))
   )).length;
   v3Release.official_municipal_rows = verifiedMetricValues.filter((row) => (
     row.city_id !== null && row.source_id === 1127
   )).length;
+}
+
+const v4Release = data.dataset_releases.find((row) => String(row.release_code).startsWith("v4-"));
+if (v4Release) {
+  v4Release.verified_fact_rows = verifiedMetricValues.filter((row) => (
+    row.source_id === null || row.source_id < 362 || row.source_id > 369
+  )).length;
+  v4Release.official_municipal_rows = data.v4_period_observations.length;
 }
 
 const activeRelease = [...data.dataset_releases]
@@ -690,9 +824,11 @@ const activeRelease = [...data.dataset_releases]
   .at(-1);
 if (activeRelease && schemaVersion >= 3) {
   activeRelease.verified_fact_rows = verifiedMetricValues.length;
-  activeRelease.official_municipal_rows = schemaVersion >= 4
-    ? data.v4_period_observations.length
-    : verifiedMetricValues.filter((row) => row.city_id !== null && row.source_id === 1127).length;
+  activeRelease.official_municipal_rows = schemaVersion >= 5
+    ? data.city_annual_indicators.length
+    : schemaVersion >= 4
+      ? data.v4_period_observations.length
+      : verifiedMetricValues.filter((row) => row.city_id !== null && row.source_id === 1127).length;
 }
 
 const release = [...data.dataset_releases]
@@ -707,6 +843,9 @@ data.client_metadata = {
   release_date: release?.release_date ?? null,
   verified_metric_points: data.metric_values.filter((row) => row.verification_status === "verified").length,
   pending_metric_points: data.metric_values.filter((row) => row.verification_status === "pending").length,
+  detailed_city_indicators: data.city_annual_indicators.length,
+  reported_city_indicators: data.city_annual_indicators.filter((row) => row.verification_status === "reported").length,
+  estimated_city_indicators: data.city_annual_indicators.filter((row) => row.verification_status === "municipal_estimate").length,
   generated_at: release?.release_date ? `${release.release_date}T00:00:00.000Z` : null
 };
 
@@ -723,7 +862,8 @@ const requiredTables = [
     "v4_period_observations",
     "v4_city_enterprise_coverage",
     "v4_city_financial_evidence"
-  ] : [])
+  ] : []),
+  ...(schemaVersion >= 5 ? ["city_annual_indicators"] : [])
 ];
 for (const table of requiredTables) {
   if (!data[table]) throw new Error(`v${schemaVersion} table not built: ${table}`);

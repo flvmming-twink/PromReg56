@@ -52,6 +52,9 @@
 
   const enterpriseMetricRows = data.enterprise_metric_view ?? data.enterprise_metrics;
   const territoryMetricRows = data.territory_metric_view ?? data.territory_metrics;
+  const isSkeleton = data.enterprises.length === 0
+    && enterpriseMetricRows.length === 0
+    && territoryMetricRows.length === 0;
   const metricsByEnterprise = groupBy(enterpriseMetricRows, "enterprise_id");
   const metricValuesByEnterprise = groupBy(
     (data.metric_values ?? []).filter((item) => item.enterprise_id !== null),
@@ -304,13 +307,17 @@
     const verifiedPoints = data.client_metadata?.verified_metric_points ?? 0;
     const pendingPoints = data.client_metadata?.pending_metric_points ?? 0;
     const detailedCityIndicators = data.client_metadata?.detailed_city_indicators ?? 0;
-    byId("databaseSummary").textContent = `${data.enterprises.length} предприятий · ${data.cities.length} территории`;
+    byId("databaseSummary").textContent = isSkeleton
+      ? `Чистый шаблон · ${data.cities.length} территории`
+      : `${data.enterprises.length} предприятий · ${data.cities.length} территории`;
     byId("databaseDate").textContent = release
       ? `Данные ${release.release_code} от ${formatDate(release.release_date)}`
       : latestAccess
         ? `Источники проверены до ${formatDate(latestAccess)}`
         : "Дата проверки источников не указана";
-    byId("sourceNote").textContent = release
+    byId("sourceNote").textContent = isSkeleton
+      ? "Структура базы готова к наполнению. Предприятия, показатели, проекты и источники пока не добавлены."
+      : release
       ? `Версия ${release.release_code}: ${numberFormat.format(verifiedPoints)} проверенных значений, ${numberFormat.format(pendingPoints)} значений со статусом «требует сверки» и ${numberFormat.format(detailedCityIndicators)} детальных муниципальных наблюдений. Использовано ${data.data_sources.length} открытых источников. Пропуски не заменяются нулями.`
       : latestAccess
         ? `База собрана из ${data.data_sources.length} открытых источников. Последняя указанная дата доступа — ${formatDate(latestAccess)}. Отсутствующие значения не подменяются демонстрационными цифрами.`
@@ -1134,7 +1141,7 @@
           <p>Безработица отображается только там, где значение есть в исходной базе.</p>
         </div>
         <div class="metric-chart-grid">
-          ${territoryCatalog.map((metric) => {
+          ${territoryCatalog.length ? territoryCatalog.map((metric) => {
             const points = metrics
               .filter((item) => item[metric.key] !== null && item[metric.key] !== undefined)
               .map((item) => ({ year: item.year, value: item[metric.key], meta: item.metric_meta?.[metric.key] }));
@@ -1145,7 +1152,7 @@
                 ${lineChartMarkup(points, { title: metric.title, formatValue: metric.format, formatAxis: metric.axisFormat })}
               </article>
             `;
-          }).join("")}
+          }).join("") : '<div class="chart-empty"><strong>Показатели не заполнены</strong><span>Для этой территории пока нет опубликованных значений.</span></div>'}
         </div>
       </section>
       ${cityIndicatorCatalog.length ? `
@@ -1311,7 +1318,7 @@
         <p class="industry-description">${escapeHtml(displayValue(industry.description))}</p>
         <div class="industry-measure">
           <span>${topCityId ? `Больше всего: ${escapeHtml(cityName(topCityId))}` : "Территории не указаны"}</span>
-          <span>${Math.round((enterprises.length / data.enterprises.length) * 100)}%</span>
+          <span>${data.enterprises.length ? Math.round((enterprises.length / data.enterprises.length) * 100) : 0}%</span>
           <div class="measure-track" aria-hidden="true"><div class="measure-fill" style="width:${(enterprises.length / max) * 100}%"></div></div>
         </div>
       `;

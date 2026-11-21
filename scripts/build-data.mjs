@@ -1,19 +1,11 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sqlPath = join(root, "database", "industrial_city_db.sql");
-const migrationPaths = [
-  join(root, "database", "migrations", "city_cards_2021_2025.sql"),
-  join(root, "database", "migrations", "fill_seven_city_gaps.sql"),
-  join(root, "database", "migrations", "remove_duplicate_metalex.sql")
-];
 const outputPath = join(root, "data.js");
-const sql = [sqlPath, ...migrationPaths]
-  .filter((path) => existsSync(path))
-  .map((path) => readFileSync(path, "utf8"))
-  .join("\n\n");
+const sql = readFileSync(sqlPath, "utf8");
 const schemaVersion = Math.max(
   1,
   ...[...sql.matchAll(/PromRegion56 v(\d+)/gi)].map((match) => Number(match[1]))

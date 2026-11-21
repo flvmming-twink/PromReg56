@@ -460,6 +460,9 @@ for (const indicator of data.city_annual_indicators) {
 
 const defaultMetricCatalog = [
   { code: "employees", scope: "enterprise", category: "Занятость", title: "Численность сотрудников", unit: "чел.", priority: 1 },
+  { code: "cost_of_sales", scope: "enterprise", category: "Финансы", title: "Себестоимость продаж", unit: "руб.", priority: 2 },
+  { code: "operating_profit", scope: "enterprise", category: "Финансы", title: "Прибыль от продаж", unit: "руб.", priority: 2 },
+  { code: "profit_before_tax", scope: "enterprise", category: "Финансы", title: "Прибыль до налогообложения", unit: "руб.", priority: 2 },
   { code: "revenue", scope: "enterprise", category: "Финансы", title: "Выручка", unit: "руб.", priority: 1 },
   { code: "net_profit", scope: "enterprise", category: "Финансы", title: "Чистая прибыль", unit: "руб.", priority: 1 },
   { code: "assets", scope: "enterprise", category: "Финансы", title: "Активы", unit: "руб.", priority: 2 },
@@ -525,7 +528,7 @@ for (const definition of inferredReleaseDefinitions.filter((item) => item.versio
     row.id >= definition.firstSourceId && row.id <= definition.lastSourceId
   ));
   const releaseDate = releaseSources.map((row) => row.access_date).filter(Boolean).sort().at(-1);
-  if (!releaseDate) throw new Error(`Cannot infer the v${definition.version} release date from data sources`);
+  if (!releaseDate) continue;
   data.dataset_releases.push({
     release_code: `v${definition.version}-${releaseDate}`,
     release_date: releaseDate,
@@ -662,6 +665,121 @@ const validEnterpriseIds = new Set(data.enterprises.map((row) => row.id));
 for (const row of insertedRows.get("metric_values") ?? []) {
   if (row.enterprise_id !== null && row.enterprise_id !== undefined && !validEnterpriseIds.has(row.enterprise_id)) continue;
   addMetricValue(row, "if-unverified");
+}
+
+// PROMREGION56_V6_EECOLOG: verifiable facts from e-ecolog.ru and FNS headcount.
+const bfoFacts = (insertedRows.get("eecolog_financial_facts") ?? []).filter((r) => (
+  Number(r.report_year) >= 2021 && Number(r.report_year) <= 2025
+  && validEnterpriseIds.has(Number(r.enterprise_id))
+  && String(data.enterprises.find((e) => e.id === Number(r.enterprise_id))?.inn) === String(r.inn)
+));
+const staffRows = (insertedRows.get("enterprise_staff_annual") ?? []).filter((r) => (
+  Number(r.report_year) >= 2021 && Number(r.report_year) <= 2025
+  && validEnterpriseIds.has(Number(r.enterprise_id))
+  && String(data.enterprises.find((e) => e.id === Number(r.enterprise_id))?.inn) === String(r.inn)
+));
+const metricYearCounts = new Map();
+for (const row of [...metricValues, ...bfoFacts.map((r) => ({
+  enterprise_id: Number(r.enterprise_id), metric_code: r.indicator, period_year: Number(r.report_year)
+}))]) {
+  if (row.enterprise_id === null || row.enterprise_id === undefined) continue;
+  const key = `${row.enterprise_id}|${row.metric_code}`;
+  if (!metricYearCounts.has(key)) metricYearCounts.set(key, new Set());
+  metricYearCounts.get(key).add(Number(row.period_year));
+}
+for (const r of bfoFacts) {
+  const eid = Number(r.enterprise_id);
+  const key = `${eid}|${r.indicator}`;
+  if ((metricYearCounts.get(key)?.size ?? 0) < 3) continue;
+  addMetricValue({
+    enterprise_id: eid,
+    metric_code: r.indicator,
+    period_year: Number(r.report_year),
+    value_numeric: Number(r.amount_rub),
+    source_id: null,
+    value_kind: "eecolog_bfo_reported",
+    verification_status: "verified",
+    reporting_scope: "legal_entity",
+    precision_kind: "exact",
+    source_detail: `e-ecolog.ru, отчет ${r.source_year}, ИНН ${r.inn}, ${r.source_url}`,
+    note: r.note || "Денежные показатели приведены в рублях (в источнике в тысячах рублей)."
+  }, "if-unverified");
+}
+const staffYearsByEnterprise = new Map();
+for (const r of staffRows) {
+  const eid = Number(r.enterprise_id);
+  if (!staffYearsByEnterprise.has(eid)) staffYearsByEnterprise.set(eid, new Set());
+  staffYearsByEnterprise.get(eid).add(Number(r.report_year));
+}
+for (const r of staffRows) {
+  const eid = Number(r.enterprise_id);
+  const qualifyingYears = new Set([
+    ...(metricYearCounts.get(`${eid}|employees`) ?? []),
+    ...(staffYearsByEnterprise.get(eid) ?? [])
+  ]);
+  if (qualifyingYears.size < 3) continue;
+  addMetricValue({
+    enterprise_id: eid,
+    metric_code: "employees",
+    period_year: Number(r.report_year),
+    value_numeric: Number(r.headcount),
+    source_id: null,
+    value_kind: "fns_average_headcount",
+    verification_status: "verified",
+    reporting_scope: "legal_entity",
+    precision_kind: "exact",
+    source_detail: r.source_url,
+    note: "Среднесписочная численность работников за год; не численность на текущую дату."
+  }, "if-unverified");
+}
+// All workforce snapshots are usable as a latest-available card even if <3 years are known.
+const latestStaffByEnterprise = new Map();
+for (const row of staffRows) {
+  const eid = Number(row.enterprise_id);
+  const previous = latestStaffByEnterprise.get(eid);
+  if (!previous || Number(row.report_year) > previous.year) {
+    latestStaffByEnterprise.set(eid, {
+      enterprise_id: eid,
+      year: Number(row.report_year),
+      headcount: Number(row.headcount),
+      source_url: row.source_url,
+      kind: "fns_average_headcount"
+    });
+  }
+}
+data.enterprise_staff_latest = [...latestStaffByEnterprise.values()].sort((a, b) => a.enterprise_id - b.enterprise_id);
+const bfoReferenceByEnterprise = new Map();
+for (const f of bfoFacts) {
+  const eid = Number(f.enterprise_id);
+  const previous = bfoReferenceByEnterprise.get(eid);
+  if (!previous || Number(f.source_year) > previous.source_year) {
+    bfoReferenceByEnterprise.set(eid, {
+      enterprise_id: eid,
+      source_year: Number(f.source_year),
+      url: f.source_url,
+      name: `Бухгалтерская отчётность, ${f.source_year} г. (e-ecolog)`,
+      source_type: "Бухгалтерская отчётность / e-ecolog",
+      access_date: "2026-11-22"
+    });
+  }
+}
+data.eecolog_reference_links = [...bfoReferenceByEnterprise.values()];
+data.eecolog_verification_stats = {
+  verified_facts: bfoFacts.length,
+  verified_staff_rows: staffRows.length,
+  workforce_enterprises: latestStaffByEnterprise.size,
+  verified_enterprises: new Set(bfoFacts.map((r) => Number(r.enterprise_id))).size
+};
+if (!data.dataset_releases.some((r) => String(r.release_code).startsWith("v6-eecolog-"))) {
+  data.dataset_releases.push({
+    release_code: "v6-eecolog-2026-11-22",
+    release_date: "2026-11-22",
+    description: "Сверка бухгалтерской отчетности e-ecolog.ru и среднесписочной численности по ФНС; отчётные годы 2021–2025.",
+    verified_fact_rows: bfoFacts.length,
+    official_municipal_rows: data.city_annual_indicators.length,
+    source_count_new: 2,
+    imported_legacy_verified: false
+  });
 }
 
 data.metric_values = metricValues

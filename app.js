@@ -39,6 +39,23 @@
   const industriesById = new Map(data.industries.map((item) => [item.id, item]));
   const sourcesById = new Map(data.data_sources.map((item) => [item.id, item]));
   const enterprisesById = new Map(data.enterprises.map((item) => [item.id, item]));
+  // PROMREGION56_V6_EECOLOG: last known annual workforce values.
+  const staffByEnterprise = new Map((data.enterprise_staff_latest ?? []).map((item) => [item.enterprise_id, item]));
+  const bfoReferenceByEnterprise = new Map((data.eecolog_reference_links ?? []).map((item) => [item.enterprise_id, item]));
+  const exactChartNumberFormat = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 12 });
+  const exactUnitMultipliers = {
+    "млн руб.": [1_000_000, "руб."],
+    "млрд руб.": [1_000_000_000, "руб."],
+    "тыс. руб.": [1_000, "руб."],
+    "тыс. чел.": [1_000, "чел."],
+    "тыс. кв. м": [1_000, "кв. м"]
+  };
+
+  function exactChartPointLabel(year, value, unit = "") {
+    const [multiplier, exactUnit] = exactUnitMultipliers[unit] ?? [1, unit];
+    const exactValue = Number(value) * multiplier;
+    return `${year} год · ${exactChartNumberFormat.format(exactValue)}${exactUnit ? ` ${exactUnit}` : ""}`;
+  }
 
   const groupBy = (items, key) => {
     const result = new Map();
@@ -497,12 +514,11 @@
     let maximum = Math.max(0, rawMax);
     if (minimum === maximum) maximum = minimum + 1;
     const range = maximum - minimum;
-    const x = (index) => values.length === 1
-      ? padding.left + plotWidth / 2
-      : padding.left + (index / (values.length - 1)) * plotWidth;
+    // Preserve calendar-year spacing even when a year has no reported figure.
+    const x = (year) => padding.left + ((Number(year) - 2021) / 4) * plotWidth;
     const y = (value) => padding.top + ((maximum - value) / range) * plotHeight;
     const baseline = y(Math.max(minimum, Math.min(0, maximum)));
-    const coordinates = values.map((point, index) => ({ ...point, x: x(index), y: y(point.value) }));
+    const coordinates = values.map((point) => ({ ...point, x: x(point.year), y: y(point.value) }));
     const linePath = coordinates.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
     const areaPath = `${linePath} L${coordinates.at(-1).x.toFixed(1)},${baseline.toFixed(1)} L${coordinates[0].x.toFixed(1)},${baseline.toFixed(1)} Z`;
     const formatValue = options.formatValue ?? ((value) => numberFormat.format(value));
@@ -513,6 +529,7 @@
 
     return `
       <div class="line-chart">
+        <div class="chart-hover-tooltip" role="status" aria-live="polite" hidden></div>
         <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(aria)}" preserveAspectRatio="xMidYMid meet">
           <g class="chart-grid-lines" aria-hidden="true">
             ${yTicks.map((tick) => `<line x1="${padding.left}" y1="${y(tick).toFixed(1)}" x2="${width - padding.right}" y2="${y(tick).toFixed(1)}"></line>`).join("")}
@@ -524,7 +541,14 @@
           <path class="chart-area" d="${areaPath}"></path>
           <path class="chart-line" d="${linePath}"></path>
           <g class="chart-points">
-            ${coordinates.map((point) => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5"><title>${point.year}: ${escapeHtml(formatValue(point.value))}</title></circle>`).join("")}
+            ${coordinates.map((point) => `
+               <g class="chart-point-interactive" tabindex="0" role="img"
+                  aria-label="${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit))}"
+                  data-tooltip="${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit))}">
+                 <circle class="chart-point-marker" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5"></circle>
+                 <circle class="chart-point-hitbox" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="22" fill="transparent"></circle>
+                 <title>${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit))}</title>
+               </g>`).join("")}
           </g>
         </svg>
         <ol class="chart-value-row" aria-hidden="true">
@@ -533,6 +557,41 @@
       </div>
     `;
   }
+
+
+  // PROMREGION56_V6_EECOLOG: hover and keyboard-focus exact values on SVG charts.
+  function setChartTooltip(marker, visible) {
+    const chart = marker?.closest?.(".line-chart");
+    const tooltip = chart?.querySelector(".chart-hover-tooltip");
+    if (!tooltip) return;
+    if (!visible) { tooltip.hidden = true; return; }
+    tooltip.textContent = marker.getAttribute("data-tooltip") ?? "";
+    tooltip.hidden = false;
+    const pointRect = marker.getBoundingClientRect();
+    const chartRect = chart.getBoundingClientRect();
+    const cx = pointRect.left - chartRect.left + pointRect.width / 2;
+    const cy = pointRect.top - chartRect.top;
+    tooltip.style.left = `${Math.max(60, Math.min(chartRect.width - 60, cx))}px`;
+    tooltip.style.top = `${Math.max(8, cy - 12)}px`;
+  }
+  document.addEventListener("pointerover", (event) => {
+    const marker = event.target.closest?.(".chart-point-interactive");
+    if (marker) setChartTooltip(marker, true);
+  });
+  document.addEventListener("pointerout", (event) => {
+    const marker = event.target.closest?.(".chart-point-interactive");
+    if (marker && event.relatedTarget?.closest?.(".chart-point-interactive") !== marker) {
+      setChartTooltip(marker, false);
+    }
+  });
+  document.addEventListener("focusin", (event) => {
+    const marker = event.target.closest?.(".chart-point-interactive");
+    if (marker) setChartTooltip(marker, true);
+  });
+  document.addEventListener("focusout", (event) => {
+    const marker = event.target.closest?.(".chart-point-interactive");
+    if (marker) setChartTooltip(marker, false);
+  });
 
   function aggregateEnterpriseMetric(metricKey) {
     const totals = new Map();
@@ -553,10 +612,12 @@
     const employees = aggregateEnterpriseMetric("employees");
     byId("overviewRevenueChart").innerHTML = lineChartMarkup(revenue, {
       title: "Суммарная выручка по доступным отчётам",
+      unit: "руб.",
       formatValue: formatMoney
     });
     byId("overviewEmployeesChart").innerHTML = lineChartMarkup(employees, {
       title: "Суммарная численность сотрудников по доступным отчётам",
+      unit: "чел.",
       formatValue: (value) => formatNumber(value, " чел.")
     });
     const revenueLatest = revenue.at(-1);
@@ -857,6 +918,7 @@
           <header><div><h4>${escapeHtml(metric.title)}</h4><p>${escapeHtml(metric.category)} · ${periodLabel}</p></div></header>
           ${lineChartMarkup(points, {
             title: metric.title,
+            unit: metric.unit,
             formatValue: metric.format,
             formatAxis: metric.axisFormat
           })}
@@ -976,6 +1038,10 @@
   function openPassport(enterpriseId, trigger) {
     const enterprise = enterprisesById.get(Number(enterpriseId));
     if (!enterprise) return;
+    const latestStaff = staffByEnterprise.get(enterprise.id);
+    const legacyStaff = latestStaff ? null : (metricsByEnterprise.get(enterprise.id) ?? [])
+      .filter((r) => r.employees !== null && r.employees !== undefined)
+      .sort((a,b) => b.year - a.year)[0];
     const city = citiesById.get(enterprise.city_id);
     const industry = industriesById.get(enterprise.industry_id);
     const metrics = [...(metricsByEnterprise.get(enterprise.id) ?? [])].sort((a, b) => a.year - b.year);
@@ -984,7 +1050,23 @@
     const identity = identityByEnterprise.get(enterprise.id);
     const qualityIssues = qualityIssuesByEnterprise.get(enterprise.id) ?? [];
     const sourceIds = getEnterpriseSourceIds(enterprise.id);
-    const sources = [...sourceIds].map((id) => sourcesById.get(id)).filter(Boolean);
+    const bfoReference = bfoReferenceByEnterprise.get(enterprise.id);
+    const prioritizedSources = [
+      ...(bfoReference ? [bfoReference] : []),
+      ...(latestStaff ? [{
+        name: "Среднесписочная численность (Firmoteka)",
+        url: latestStaff.source_url,
+        source_type: "Среднесписочная статистика / ФНС",
+        access_date: "2026-11-22"
+      }] : []),
+      ...[...sourceIds].map((id) => sourcesById.get(id)).filter(Boolean)
+    ];
+    const uniqueSourceUrls = new Set();
+    const sources = prioritizedSources.filter((source) => {
+      if (!source?.url || uniqueSourceUrls.has(source.url)) return false;
+      uniqueSourceUrls.add(source.url);
+      return true;
+    }).slice(0, 2);
 
     const website = safeUrl(enterprise.website);
     const websiteMarkup = website
@@ -1017,6 +1099,15 @@
         ${fieldMarkup("Телефон", phoneMarkup, true)}
         ${fieldMarkup("Email", emailMarkup, true)}
       </dl>
+      <section class="passport-workforce-latest" aria-label="Численность сотрудников">
+         ${latestStaff ? `
+           <strong>Актуальное число сотрудников на ${latestStaff.year} год: ${numberFormat.format(latestStaff.headcount)} чел.</strong>
+           <span>Среднесписочная численность за год, а не количество работников на текущую дату.</span>
+         ` : legacyStaff ? `
+           <strong>Последняя численность в базе за ${legacyStaff.year} год: ${numberFormat.format(legacyStaff.employees)} чел.</strong>
+           <span>Значение из прежнего набора; требуется дополнительная проверка.</span>
+         ` : `<span>Актуальные открытые сведения о численности сотрудников пока не найдены.</span>`}
+       </section>
 
       <section class="passport-section">
         <h3>О предприятии</h3>
@@ -1149,7 +1240,12 @@
             return `
               <article class="metric-chart-panel">
                 <header><div><h4>${escapeHtml(metric.title)}</h4><p>${points.length ? `${escapeHtml(metric.category)} · ${points.length} значений · проверено ${verifiedCount}` : "Нет опубликованных значений"}</p></div></header>
-                ${lineChartMarkup(points, { title: metric.title, formatValue: metric.format, formatAxis: metric.axisFormat })}
+                ${lineChartMarkup(points, {
+                  title: metric.title,
+                  unit: metric.unit,
+                  formatValue: metric.format,
+                  formatAxis: metric.axisFormat
+                })}
               </article>
             `;
           }).join("") : '<div class="chart-empty"><strong>Показатели не заполнены</strong><span>Для этой территории пока нет опубликованных значений.</span></div>'}
@@ -1188,6 +1284,7 @@
                   <header><div><h4>${escapeHtml(metric.title)}</h4><p>${escapeHtml(statusText || "Нет опубликованных значений")}</p></div></header>
                   ${lineChartMarkup(points, {
                     title: metric.title,
+                    unit: metric.unit,
                     formatValue: metricFormatter(metric.unit),
                     formatAxis: metricAxisFormatter(metric.unit)
                   })}

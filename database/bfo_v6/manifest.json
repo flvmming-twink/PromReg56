@@ -1,0 +1,20 @@
+{
+  "companies_total": 39,
+  "cities": {
+    "Новотроицк": 15,
+    "Орск": 19,
+    "Оренбург": 5
+  },
+  "bfo_companies_verified": 8,
+  "bfo_facts": 140,
+  "bfo_indicator_series_3plus": 26,
+  "staff_companies": 15,
+  "staff_annual_rows": 35,
+  "staff_series_3plus": 10,
+  "bfo_expected_urls": 195,
+  "created_at": "2026-11-22",
+  "source_unit": "thousand_rub -> rub, x1000",
+  "bfo_report_pages_directly_parsed": 15,
+  "bfo_registry_urls_unverified": 180,
+  "coverage_companies_total": 39
+}

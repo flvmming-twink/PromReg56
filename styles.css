@@ -2096,3 +2096,24 @@ select:hover {
     padding: 20px;
   }
 }
+
+/* PROMREGION56_V6_EECOLOG: focusable chart points, tooltip, latest staffing. */
+.line-chart { position: relative; }
+.chart-point-interactive { cursor: crosshair; outline: none; }
+.chart-point-interactive .chart-point-marker { stroke: var(--surface, #fff); stroke-width: 2; }
+.chart-point-interactive .chart-point-hitbox { fill: transparent !important; stroke: none !important; pointer-events: all; }
+.chart-point-interactive:hover .chart-point-marker,
+.chart-point-interactive:focus .chart-point-marker { stroke-width: 3; r: 7; }
+.chart-hover-tooltip {
+  position: absolute; z-index: 15; transform: translate(-50%, -100%);
+  max-width: min(94%, 340px); padding: 9px 12px;
+  font-variant-numeric: tabular-nums; line-height: 1.3; font-size: 13px;
+  border-radius: 8px; color: #fff; background: #202c3e;
+  box-shadow: 0 6px 20px rgba(0,0,0,.2); pointer-events: none; white-space: nowrap;
+}
+.chart-hover-tooltip[hidden] { display: none; }
+.passport-workforce-latest { display: flex; flex-direction: column; gap: 5px;
+  border: 1px solid var(--border, #c9d2de); border-radius: 9px;
+  padding: 14px 16px; margin: 16px 0; }
+.passport-workforce-latest strong { font-size: 1rem; }
+.passport-workforce-latest span { font-size: .85rem; opacity: .8; }

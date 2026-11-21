@@ -1,0 +1,141 @@
+﻿enterprise_id;inn;city;name;year;indicator;amount_rub;source_year;source_url;original_thousand_rub;kind;note
+11;5616006746;Орск;ОРМЕТ;2021;revenue;5727482000;2021;https://e-ecolog.ru/buh/2021/5616006746;5727482;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2022;revenue;6068075000;2023;https://e-ecolog.ru/buh/2023/5616006746;6068075;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2023;revenue;7001608000;2023;https://e-ecolog.ru/buh/2023/5616006746;7001608;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2024;revenue;8457293000;2025;https://e-ecolog.ru/buh/2025/5616006746;8457293;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2025;revenue;9353553000;2025;https://e-ecolog.ru/buh/2025/5616006746;9353553;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2021;net_profit;1168519000;2021;https://e-ecolog.ru/buh/2021/5616006746;1168519;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2022;net_profit;1358592000;2023;https://e-ecolog.ru/buh/2023/5616006746;1358592;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2023;net_profit;1954746000;2023;https://e-ecolog.ru/buh/2023/5616006746;1954746;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2024;net_profit;1991928000;2025;https://e-ecolog.ru/buh/2025/5616006746;1991928;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2025;net_profit;1867016000;2025;https://e-ecolog.ru/buh/2025/5616006746;1867016;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2021;assets;9888342000;2023;https://e-ecolog.ru/buh/2023/5616006746;9888342;reported_financial;"Переизложенная сравнительная величина в более поздней форме; отличалась в первоначальном отчете"
+11;5616006746;Орск;ОРМЕТ;2022;assets;11003754000;2023;https://e-ecolog.ru/buh/2023/5616006746;11003754;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2023;assets;13028848000;2023;https://e-ecolog.ru/buh/2023/5616006746;13028848;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2024;assets;14858220000;2025;https://e-ecolog.ru/buh/2025/5616006746;14858220;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2025;assets;15021111000;2025;https://e-ecolog.ru/buh/2025/5616006746;15021111;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2021;cost_of_sales;3799693000;2021;https://e-ecolog.ru/buh/2021/5616006746;3799693;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+11;5616006746;Орск;ОРМЕТ;2022;cost_of_sales;3889217000;2023;https://e-ecolog.ru/buh/2023/5616006746;3889217;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+11;5616006746;Орск;ОРМЕТ;2023;cost_of_sales;3975860000;2023;https://e-ecolog.ru/buh/2023/5616006746;3975860;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+11;5616006746;Орск;ОРМЕТ;2024;cost_of_sales;5242309000;2025;https://e-ecolog.ru/buh/2025/5616006746;5242309;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+11;5616006746;Орск;ОРМЕТ;2025;cost_of_sales;6093689000;2025;https://e-ecolog.ru/buh/2025/5616006746;6093689;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+11;5616006746;Орск;ОРМЕТ;2021;operating_profit;1573007000;2021;https://e-ecolog.ru/buh/2021/5616006746;1573007;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2022;operating_profit;1817510000;2023;https://e-ecolog.ru/buh/2023/5616006746;1817510;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2023;operating_profit;2637354000;2023;https://e-ecolog.ru/buh/2023/5616006746;2637354;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2024;operating_profit;2780781000;2025;https://e-ecolog.ru/buh/2025/5616006746;2780781;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2025;operating_profit;2755237000;2025;https://e-ecolog.ru/buh/2025/5616006746;2755237;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2021;profit_before_tax;1462674000;2021;https://e-ecolog.ru/buh/2021/5616006746;1462674;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2022;profit_before_tax;1699619000;2023;https://e-ecolog.ru/buh/2023/5616006746;1699619;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2023;profit_before_tax;2496694000;2023;https://e-ecolog.ru/buh/2023/5616006746;2496694;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2024;profit_before_tax;2616861000;2025;https://e-ecolog.ru/buh/2025/5616006746;2616861;reported_financial;
+11;5616006746;Орск;ОРМЕТ;2025;profit_before_tax;2503969000;2025;https://e-ecolog.ru/buh/2025/5616006746;2503969;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2021;revenue;53963000;2021;https://e-ecolog.ru/buh/2021/5607143440;53963;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2022;revenue;69458000;2023;https://e-ecolog.ru/buh/2023/5607143440;69458;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2023;revenue;41900000;2023;https://e-ecolog.ru/buh/2023/5607143440;41900;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2024;revenue;62323000;2025;https://e-ecolog.ru/buh/2025/5607143440;62323;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2025;revenue;62613000;2025;https://e-ecolog.ru/buh/2025/5607143440;62613;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2021;net_profit;2582000;2021;https://e-ecolog.ru/buh/2021/5607143440;2582;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2022;net_profit;8433000;2023;https://e-ecolog.ru/buh/2023/5607143440;8433;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2023;net_profit;4726000;2023;https://e-ecolog.ru/buh/2023/5607143440;4726;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2024;net_profit;203000;2025;https://e-ecolog.ru/buh/2025/5607143440;203;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2025;net_profit;-2573000;2025;https://e-ecolog.ru/buh/2025/5607143440;-2573;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2021;assets;49650000;2023;https://e-ecolog.ru/buh/2023/5607143440;49650;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2022;assets;61008000;2023;https://e-ecolog.ru/buh/2023/5607143440;61008;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2023;assets;68653000;2023;https://e-ecolog.ru/buh/2023/5607143440;68653;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2024;assets;57638000;2025;https://e-ecolog.ru/buh/2025/5607143440;57638;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2025;assets;55928000;2025;https://e-ecolog.ru/buh/2025/5607143440;55928;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2021;cost_of_sales;46156000;2021;https://e-ecolog.ru/buh/2021/5607143440;46156;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+38;5607143440;Новотроицк;Поддон Сервис;2022;cost_of_sales;54656000;2023;https://e-ecolog.ru/buh/2023/5607143440;54656;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+38;5607143440;Новотроицк;Поддон Сервис;2023;cost_of_sales;32538000;2023;https://e-ecolog.ru/buh/2023/5607143440;32538;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+38;5607143440;Новотроицк;Поддон Сервис;2024;cost_of_sales;53008000;2025;https://e-ecolog.ru/buh/2025/5607143440;53008;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+38;5607143440;Новотроицк;Поддон Сервис;2025;cost_of_sales;56813000;2025;https://e-ecolog.ru/buh/2025/5607143440;56813;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+38;5607143440;Новотроицк;Поддон Сервис;2021;operating_profit;5214000;2021;https://e-ecolog.ru/buh/2021/5607143440;5214;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2022;operating_profit;10918000;2023;https://e-ecolog.ru/buh/2023/5607143440;10918;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2023;operating_profit;6018000;2023;https://e-ecolog.ru/buh/2023/5607143440;6018;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2024;operating_profit;3650000;2025;https://e-ecolog.ru/buh/2025/5607143440;3650;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2025;operating_profit;-403000;2025;https://e-ecolog.ru/buh/2025/5607143440;-403;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2021;profit_before_tax;2582000;2021;https://e-ecolog.ru/buh/2021/5607143440;2582;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2022;profit_before_tax;8433000;2023;https://e-ecolog.ru/buh/2023/5607143440;8433;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2023;profit_before_tax;4726000;2023;https://e-ecolog.ru/buh/2023/5607143440;4726;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2024;profit_before_tax;204000;2025;https://e-ecolog.ru/buh/2025/5607143440;204;reported_financial;
+38;5607143440;Новотроицк;Поддон Сервис;2025;profit_before_tax;-3100000;2025;https://e-ecolog.ru/buh/2025/5607143440;-3100;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2021;revenue;1858232000;2021;https://e-ecolog.ru/buh/2021/5607142044;1858232;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2022;revenue;3579291000;2023;https://e-ecolog.ru/buh/2023/5607142044;3579291;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2023;revenue;5059405000;2023;https://e-ecolog.ru/buh/2023/5607142044;5059405;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2024;revenue;5789017000;2025;https://e-ecolog.ru/buh/2025/5607142044;5789017;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2025;revenue;6775672000;2025;https://e-ecolog.ru/buh/2025/5607142044;6775672;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2021;net_profit;557000;2021;https://e-ecolog.ru/buh/2021/5607142044;557;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2022;net_profit;215082000;2023;https://e-ecolog.ru/buh/2023/5607142044;215082;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2023;net_profit;217861000;2023;https://e-ecolog.ru/buh/2023/5607142044;217861;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2024;net_profit;-88542000;2025;https://e-ecolog.ru/buh/2025/5607142044;-88542;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2025;net_profit;-16271000;2025;https://e-ecolog.ru/buh/2025/5607142044;-16271;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2021;assets;2246622000;2023;https://e-ecolog.ru/buh/2023/5607142044;2246622;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2022;assets;7392310000;2023;https://e-ecolog.ru/buh/2023/5607142044;7392310;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2023;assets;6465103000;2023;https://e-ecolog.ru/buh/2023/5607142044;6465103;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2024;assets;7262191000;2025;https://e-ecolog.ru/buh/2025/5607142044;7262191;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2025;assets;7239713000;2025;https://e-ecolog.ru/buh/2025/5607142044;7239713;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2021;cost_of_sales;1547566000;2021;https://e-ecolog.ru/buh/2021/5607142044;1547566;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+9;5607142044;Новотроицк;Оренбургский пропант;2022;cost_of_sales;2929964000;2023;https://e-ecolog.ru/buh/2023/5607142044;2929964;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+9;5607142044;Новотроицк;Оренбургский пропант;2023;cost_of_sales;4299788000;2023;https://e-ecolog.ru/buh/2023/5607142044;4299788;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+9;5607142044;Новотроицк;Оренбургский пропант;2024;cost_of_sales;5081573000;2025;https://e-ecolog.ru/buh/2025/5607142044;5081573;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+9;5607142044;Новотроицк;Оренбургский пропант;2025;cost_of_sales;5816015000;2025;https://e-ecolog.ru/buh/2025/5607142044;5816015;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+9;5607142044;Новотроицк;Оренбургский пропант;2021;operating_profit;196234000;2021;https://e-ecolog.ru/buh/2021/5607142044;196234;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2022;operating_profit;396055000;2023;https://e-ecolog.ru/buh/2023/5607142044;396055;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2023;operating_profit;426028000;2023;https://e-ecolog.ru/buh/2023/5607142044;426028;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2024;operating_profit;384160000;2025;https://e-ecolog.ru/buh/2025/5607142044;384160;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2025;operating_profit;640533000;2025;https://e-ecolog.ru/buh/2025/5607142044;640533;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2021;profit_before_tax;570000;2021;https://e-ecolog.ru/buh/2021/5607142044;570;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2022;profit_before_tax;215227000;2023;https://e-ecolog.ru/buh/2023/5607142044;215227;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2023;profit_before_tax;217876000;2023;https://e-ecolog.ru/buh/2023/5607142044;217876;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2024;profit_before_tax;-104485000;2025;https://e-ecolog.ru/buh/2025/5607142044;-104485;reported_financial;
+9;5607142044;Новотроицк;Оренбургский пропант;2025;profit_before_tax;-9173000;2025;https://e-ecolog.ru/buh/2025/5607142044;-9173;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2022;revenue;54786000;2023;https://e-ecolog.ru/buh/2023/5607143640;54786;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2023;revenue;176723000;2023;https://e-ecolog.ru/buh/2023/5607143640;176723;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2024;revenue;217739000;2025;https://e-ecolog.ru/buh/2025/5607143640;217739;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2025;revenue;239915000;2025;https://e-ecolog.ru/buh/2025/5607143640;239915;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2022;net_profit;1903000;2023;https://e-ecolog.ru/buh/2023/5607143640;1903;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2023;net_profit;-90770000;2023;https://e-ecolog.ru/buh/2023/5607143640;-90770;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2024;net_profit;376000;2025;https://e-ecolog.ru/buh/2025/5607143640;376;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2025;net_profit;-74353000;2025;https://e-ecolog.ru/buh/2025/5607143640;-74353;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2021;assets;1399032000;2023;https://e-ecolog.ru/buh/2023/5607143640;1399032;reported_financial;"Переизложенная сравнительная величина в более поздней форме; отличалась в первоначальном отчете"
+39;5607143640;Новотроицк;НЗЦМ;2022;assets;1700361000;2023;https://e-ecolog.ru/buh/2023/5607143640;1700361;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2023;assets;1917989000;2023;https://e-ecolog.ru/buh/2023/5607143640;1917989;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2024;assets;2049808000;2025;https://e-ecolog.ru/buh/2025/5607143640;2049808;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2025;assets;2007890000;2025;https://e-ecolog.ru/buh/2025/5607143640;2007890;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2022;cost_of_sales;37694000;2023;https://e-ecolog.ru/buh/2023/5607143640;37694;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+39;5607143640;Новотроицк;НЗЦМ;2023;cost_of_sales;207615000;2023;https://e-ecolog.ru/buh/2023/5607143640;207615;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+39;5607143640;Новотроицк;НЗЦМ;2024;cost_of_sales;161186000;2025;https://e-ecolog.ru/buh/2025/5607143640;161186;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+39;5607143640;Новотроицк;НЗЦМ;2025;cost_of_sales;271120000;2025;https://e-ecolog.ru/buh/2025/5607143640;271120;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+39;5607143640;Новотроицк;НЗЦМ;2022;operating_profit;13480000;2023;https://e-ecolog.ru/buh/2023/5607143640;13480;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2023;operating_profit;-66604000;2023;https://e-ecolog.ru/buh/2023/5607143640;-66604;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2024;operating_profit;-22416000;2025;https://e-ecolog.ru/buh/2025/5607143640;-22416;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2025;operating_profit;-73873000;2025;https://e-ecolog.ru/buh/2025/5607143640;-73873;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2022;profit_before_tax;1903000;2023;https://e-ecolog.ru/buh/2023/5607143640;1903;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2023;profit_before_tax;-90770000;2023;https://e-ecolog.ru/buh/2023/5607143640;-90770;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2024;profit_before_tax;376000;2025;https://e-ecolog.ru/buh/2025/5607143640;376;reported_financial;
+39;5607143640;Новотроицк;НЗЦМ;2025;profit_before_tax;-74353000;2025;https://e-ecolog.ru/buh/2025/5607143640;-74353;reported_financial;
+1004;5614088983;Орск;Союзпереработка;2023;assets;10000;2025;https://e-ecolog.ru/buh/2025/5614088983;10;reported_financial;
+1004;5614088983;Орск;Союзпереработка;2024;assets;10000;2025;https://e-ecolog.ru/buh/2025/5614088983;10;reported_financial;
+1004;5614088983;Орск;Союзпереработка;2025;assets;1392000;2025;https://e-ecolog.ru/buh/2025/5614088983;1392;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2024;revenue;15807970000;2025;https://e-ecolog.ru/buh/2025/5612065701;15807970;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2025;revenue;30318135000;2025;https://e-ecolog.ru/buh/2025/5612065701;30318135;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2024;net_profit;208371000;2025;https://e-ecolog.ru/buh/2025/5612065701;208371;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2025;net_profit;3676240000;2025;https://e-ecolog.ru/buh/2025/5612065701;3676240;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2023;assets;6627903000;2025;https://e-ecolog.ru/buh/2025/5612065701;6627903;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2024;assets;16380865000;2025;https://e-ecolog.ru/buh/2025/5612065701;16380865;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2025;assets;21597519000;2025;https://e-ecolog.ru/buh/2025/5612065701;21597519;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2024;cost_of_sales;15177779000;2025;https://e-ecolog.ru/buh/2025/5612065701;15177779;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2025;cost_of_sales;24982368000;2025;https://e-ecolog.ru/buh/2025/5612065701;24982368;reported_financial;Расход по форме 2120 приведён положительным числом (модуль)
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2024;operating_profit;395007000;2025;https://e-ecolog.ru/buh/2025/5612065701;395007;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2025;operating_profit;5048754000;2025;https://e-ecolog.ru/buh/2025/5612065701;5048754;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2024;profit_before_tax;307219000;2025;https://e-ecolog.ru/buh/2025/5612065701;307219;reported_financial;
+1102;5612065701;Оренбург;Оренбург-РеалСтрой;2025;profit_before_tax;4903072000;2025;https://e-ecolog.ru/buh/2025/5612065701;4903072;reported_financial;
+3;5607142213;Новотроицк;Новотроицкий содовый завод;2021;revenue;761399000;2022;https://e-ecolog.ru/buh/2022/5607142213;761399;reported_financial;
+3;5607142213;Новотроицк;Новотроицкий содовый завод;2022;revenue;1666109000;2022;https://e-ecolog.ru/buh/2022/5607142213;1666109;reported_financial;
+3;5607142213;Новотроицк;Новотроицкий содовый завод;2021;net_profit;-571287000;2022;https://e-ecolog.ru/buh/2022/5607142213;-571287;reported_financial;
+3;5607142213;Новотроицк;Новотроицкий содовый завод;2022;net_profit;-10128000;2022;https://e-ecolog.ru/buh/2022/5607142213;-10128;reported_financial;
+3;5607142213;Новотроицк;Новотроицкий содовый завод;2021;assets;3617953000;2022;https://e-ecolog.ru/buh/2022/5607142213;3617953;reported_financial;
+3;5607142213;Новотроицк;Новотроицкий содовый завод;2022;assets;4067685000;2022;https://e-ecolog.ru/buh/2022/5607142213;4067685;reported_financial;
+2;5607141530;Новотроицк;НСплав;2021;revenue;3415668000;2021;https://e-ecolog.ru/buh/2021/5607141530;3415668;reported_financial;
+2;5607141530;Новотроицк;НСплав;2021;net_profit;650146000;2021;https://e-ecolog.ru/buh/2021/5607141530;650146;reported_financial;
+2;5607141530;Новотроицк;НСплав;2021;assets;2337890000;2021;https://e-ecolog.ru/buh/2021/5607141530;2337890;reported_financial;

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Открытый реестр предприятий, отраслей, территорий и источников Оренбургской области.">
+  <meta name="description" content="Промышленный реестр предприятий Новотроицка, Орска и Оренбурга с годовыми показателями за 2021–2025 годы.">
   <meta name="theme-color" content="#f2f4f3">
   <title>PromRegion56 — промышленный атлас Оренбургской области</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -21,7 +21,7 @@
       <span class="brand-mark" aria-hidden="true">56</span>
       <span>
         <strong>PromRegion</strong>
-        <small>Промышленный атлас области</small>
+        <small>Новотроицк · Орск · Оренбург</small>
       </span>
     </a>
     <div class="masthead-meta">
@@ -57,7 +57,7 @@
     <section class="view is-active" id="view-overview" data-view-panel="overview" tabindex="-1">
       <div class="overview-head">
         <div>
-          <h1>Промышленная карта Оренбургской области</h1>
+          <h1>Промышленная карта трёх городов</h1>
           <p>Найдите предприятие и сразу увидите его территорию, отрасль, показатели и открытые источники.</p>
         </div>
         <form class="main-search" id="mainSearchForm" role="search">
@@ -98,7 +98,7 @@
             </div>
           </div>
           <div class="enterprise-map" id="enterpriseMap" aria-label="Интерактивная карта предприятий Оренбургской области">
-            <div class="map-empty empty-state" id="mapEmpty" hidden>Предприятия пока не добавлены.</div>
+            <div class="map-empty empty-state" id="mapEmpty" hidden>По выбранным условиям объектов нет.</div>
           </div>
           <div class="map-key">
             <span><i class="key-dot key-dot-major"></i>Крупное или градообразующее</span>
@@ -212,8 +212,8 @@
           <tbody id="enterpriseRows"></tbody>
         </table>
         <div class="empty-state" id="enterpriseEmpty" hidden>
-          <strong>Реестр пока пуст</strong>
-          <span>Добавьте предприятия в базу, чтобы они появились в этом разделе.</span>
+          <strong>Ничего не найдено</strong>
+          <span>Попробуйте изменить запрос или сбросить фильтры.</span>
         </div>
       </div>
       <nav class="pagination" id="enterprisePagination" aria-label="Страницы реестра"></nav>
@@ -223,7 +223,7 @@
       <header class="view-heading">
         <div>
           <h1>Территории</h1>
-          <p>Города и районы, представленные в базе, без рейтингов и условных оценок.</p>
+          <p>Новотроицк, Орск и Оренбург — без рейтингов и смешения муниципальных данных с показателями предприятий.</p>
         </div>
       </header>
       <div class="single-filter">
@@ -266,7 +266,7 @@
       </form>
       <p class="result-line" id="sourceResultCount" role="status">Загрузка источников…</p>
       <div class="source-ledger" id="sourceRows"></div>
-      <div class="empty-state" id="sourceEmpty" hidden>Источники пока не добавлены.</div>
+      <div class="empty-state" id="sourceEmpty" hidden>Источники не найдены.</div>
       <nav class="pagination" id="sourcePagination" aria-label="Страницы списка источников"></nav>
     </section>
   </main>

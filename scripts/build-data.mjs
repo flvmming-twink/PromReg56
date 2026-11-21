@@ -246,6 +246,12 @@ for (const match of sql.matchAll(copyBlock)) {
   });
 }
 
+const insertedRows = new Map();
+for (const insert of parseValueInserts(sql)) {
+  if (!insertedRows.has(insert.table)) insertedRows.set(insert.table, []);
+  insertedRows.get(insert.table).push(...insert.rows);
+}
+
 const baseTables = [
   "cities",
   "data_sources",
@@ -259,13 +265,9 @@ const baseTables = [
 ];
 
 for (const table of baseTables) {
+  if (!data[table] && insertedRows.has(table)) data[table] = insertedRows.get(table);
+  if (!data[table] && new RegExp(`CREATE\\s+TABLE\\s+(?:public\\.)?${table}\\b`, "i").test(sql)) data[table] = [];
   if (!data[table]) throw new Error(`Table not found in SQL dump: ${table}`);
-}
-
-const insertedRows = new Map();
-for (const insert of parseValueInserts(sql)) {
-  if (!insertedRows.has(insert.table)) insertedRows.set(insert.table, []);
-  insertedRows.get(insert.table).push(...insert.rows);
 }
 
 const cityMetadataPattern = /WITH\s+incoming\(id,region,district,latitude,longitude,territory_type,oktmo,administrative_center\)\s+AS\s*\(\s*VALUES\s*([\s\S]*?)\s*\)\s*UPDATE\s+public\.cities/gi;
@@ -421,6 +423,11 @@ data.city_annual_indicators = upsertBy(
   insertedRows.get("city_annual_indicators") ?? [],
   (row) => `${row.city_id}|${row.year}|${row.metric_code}`
 );
+data.enterprise_metric_quality = upsertBy(
+  [],
+  insertedRows.get("enterprise_metric_quality") ?? [],
+  (row) => `${row.enterprise_id}|${row.year}|${row.indicator}`
+);
 
 function normalizeCityIndicatorValue(row) {
   if (row.numeric_value === null || row.numeric_value === undefined) return null;
@@ -451,10 +458,45 @@ for (const indicator of data.city_annual_indicators) {
   if (territoryMetric) territoryMetric[field] = value;
 }
 
-data.metric_catalog = insertMissingBy([], insertedRows.get("metric_catalog") ?? [], (row) => row.code);
+const defaultMetricCatalog = [
+  { code: "employees", scope: "enterprise", category: "Занятость", title: "Численность сотрудников", unit: "чел.", priority: 1 },
+  { code: "revenue", scope: "enterprise", category: "Финансы", title: "Выручка", unit: "руб.", priority: 1 },
+  { code: "net_profit", scope: "enterprise", category: "Финансы", title: "Чистая прибыль", unit: "руб.", priority: 1 },
+  { code: "assets", scope: "enterprise", category: "Финансы", title: "Активы", unit: "руб.", priority: 2 },
+  { code: "investments", scope: "enterprise", category: "Инвестиции", title: "Инвестиции", unit: "руб.", priority: 2 },
+  { code: "average_salary", scope: "enterprise", category: "Занятость", title: "Средняя заработная плата", unit: "руб./мес.", priority: 2 },
+  { code: "taxes_paid", scope: "enterprise", category: "Финансы", title: "Уплаченные налоги", unit: "руб.", priority: 3 },
+  { code: "production_volume", scope: "enterprise", category: "Производство", title: "Объём производства", unit: "руб.", priority: 3 },
+  { code: "population", scope: "territory", category: "Демография", title: "Численность населения", unit: "чел.", priority: 1 },
+  { code: "average_salary_territory", scope: "territory", category: "Доходы", title: "Среднемесячная заработная плата", unit: "руб./мес.", priority: 1 },
+  { code: "unemployment_rate", scope: "territory", category: "Рынок труда", title: "Уровень безработицы", unit: "%", priority: 1 },
+  { code: "investments_territory", scope: "territory", category: "Инвестиции", title: "Инвестиции в основной капитал", unit: "руб.", priority: 2 },
+  { code: "industrial_output", scope: "territory", category: "Промышленность", title: "Промышленная отгрузка", unit: "руб.", priority: 2 },
+  { code: "employed_population", scope: "territory", category: "Рынок труда", title: "Занятое население", unit: "чел.", priority: 3 },
+  { code: "enterprises_count", scope: "territory", category: "Экономика", title: "Количество предприятий", unit: "ед.", priority: 3 },
+  { code: "industrial_enterprises_count", scope: "territory", category: "Промышленность", title: "Промышленные предприятия", unit: "ед.", priority: 3 }
+];
+data.metric_catalog = insertMissingBy(
+  [...defaultMetricCatalog],
+  insertedRows.get("metric_catalog") ?? [],
+  (row) => row.code
+);
 data.data_quality_issues = upsertBy([], insertedRows.get("data_quality_issues") ?? [], (row) => row.issue_key);
 data.dataset_releases = upsertBy([], insertedRows.get("dataset_releases") ?? [], (row) => row.release_code);
 data.enterprise_product_output = insertedRows.get("enterprise_product_output") ?? [];
+
+if (!data.dataset_releases.length && data.cities.length === 3 && data.enterprise_metric_quality.length) {
+  const releaseDate = data.data_sources.map((row) => row.access_date).filter(Boolean).sort().at(-1) ?? "2026-11-21";
+  data.dataset_releases.push({
+    release_code: `three-cities-${releaseDate}`,
+    release_date: releaseDate,
+    description: "Отфильтрованный набор Новотроицка, Орска и Оренбурга за 2021–2025 годы.",
+    verified_fact_rows: 0,
+    official_municipal_rows: data.city_annual_indicators.length,
+    source_count_new: data.data_sources.length,
+    imported_legacy_verified: false
+  });
+}
 
 const inferredReleaseDefinitions = [
   {
@@ -546,24 +588,32 @@ const enterpriseLegacyMetrics = [
   ["average_salary", "average_salary"],
   ["net_profit", "net_profit"],
   ["assets", "assets"],
-  ["taxes_paid", "taxes_paid"]
+  ["taxes_paid", "taxes_paid"],
+  ["production_volume", "production_volume"]
 ];
+const enterpriseMetricQualityByKey = new Map(
+  data.enterprise_metric_quality.map((row) => [
+    `${row.enterprise_id}|${row.year}|${row.indicator}`,
+    row
+  ])
+);
 
 for (const row of data.enterprise_metrics) {
   enterpriseLegacyMetrics.forEach(([metricCode, column]) => {
     if (row[column] === null || row[column] === undefined) return;
+    const quality = enterpriseMetricQualityByKey.get(`${row.enterprise_id}|${row.year}|${metricCode}`);
     addMetricValue({
       metric_code: metricCode,
       enterprise_id: row.enterprise_id,
       period_year: row.year,
       value_numeric: row[column],
       source_id: row.source_id,
-      value_kind: "legacy_unclassified",
+      value_kind: quality?.quality_status ?? "source_linked_legacy",
       verification_status: "pending",
-      reporting_scope: "unknown",
+      reporting_scope: "legal_entity",
       precision_kind: "unknown",
-      source_detail: `Импорт из enterprise_metrics.id=${row.id}`,
-      note: "Методика, год источника, субъект учета и точность требуют сверки"
+      source_detail: `Импорт из enterprise_metrics.id=${row.id}; качество: ${quality?.quality_status ?? "source_linked_legacy"}`,
+      note: quality?.note || "Наследованное значение со ссылкой на источник; независимая аудиторская проверка не проводилась"
     });
   });
 }
@@ -845,6 +895,7 @@ const requiredTables = [
   "metric_catalog",
   "metric_values",
   "metric_value_sources",
+  "enterprise_metric_quality",
   "data_quality_issues",
   "dataset_releases",
   ...(schemaVersion >= 3 ? ["enterprise_research_status", "enterprise_research_queue"] : []),

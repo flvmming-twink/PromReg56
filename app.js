@@ -51,10 +51,23 @@
     "тыс. кв. м": [1_000, "кв. м"]
   };
 
-  function exactChartPointLabel(year, value, unit = "") {
+  function metricEvidenceLabel(meta) {
+    if (!meta) return "";
+    if (meta.verification_status === "verified") return "проверено";
+    if (meta.precision_kind === "rounded_0_1_mln_rub" || meta.value_kind === "registry_rounded") {
+      return "округлено до 0,1 млн ₽; требует сверки";
+    }
+    if (meta.value_kind === "legacy_pending") return "унаследованное значение; требует сверки";
+    if (meta.value_kind === "registry_linked_pending") return "источник связан; требуется сверка";
+    return "требует сверки";
+  }
+
+  function exactChartPointLabel(year, value, unit = "", meta = null) {
     const [multiplier, exactUnit] = exactUnitMultipliers[unit] ?? [1, unit];
     const exactValue = Number(value) * multiplier;
-    return `${year} год · ${exactChartNumberFormat.format(exactValue)}${exactUnit ? ` ${exactUnit}` : ""}`;
+    const approximate = meta?.precision_kind === "rounded_0_1_mln_rub";
+    const status = metricEvidenceLabel(meta);
+    return `${year} год · ${approximate ? "≈ " : ""}${exactChartNumberFormat.format(exactValue)}${exactUnit ? ` ${exactUnit}` : ""}${status ? ` · ${status}` : ""}`;
   }
 
   const groupBy = (items, key) => {
@@ -543,11 +556,11 @@
           <g class="chart-points">
             ${coordinates.map((point) => `
                <g class="chart-point-interactive" tabindex="0" role="img"
-                  aria-label="${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit))}"
-                  data-tooltip="${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit))}">
+                  aria-label="${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit, point.meta))}"
+                  data-tooltip="${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit, point.meta))}">
                  <circle class="chart-point-marker" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5"></circle>
                  <circle class="chart-point-hitbox" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="22" fill="transparent"></circle>
-                 <title>${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit))}</title>
+                 <title>${escapeHtml(exactChartPointLabel(point.year, point.value, options.unit, point.meta))}</title>
                </g>`).join("")}
           </g>
         </svg>
@@ -591,6 +604,23 @@
   document.addEventListener("focusout", (event) => {
     const marker = event.target.closest?.(".chart-point-interactive");
     if (marker) setChartTooltip(marker, false);
+  });
+  // SVG focusin/focusout is inconsistent in some engines; captured focus and
+  // blur keep the same keyboard behavior without changing the tab order.
+  document.addEventListener("focus", (event) => {
+    const marker = event.target.closest?.(".chart-point-interactive");
+    if (marker) setChartTooltip(marker, true);
+  }, true);
+  document.addEventListener("blur", (event) => {
+    const marker = event.target.closest?.(".chart-point-interactive");
+    if (marker) setChartTooltip(marker, false);
+  }, true);
+  document.addEventListener("pointerdown", (event) => {
+    const marker = event.target.closest?.(".chart-point-interactive");
+    if (marker && event.pointerType === "touch") {
+      marker.focus();
+      setChartTooltip(marker, true);
+    }
   });
 
   function aggregateEnterpriseMetric(metricKey) {
@@ -891,9 +921,14 @@
   function verificationMarkup(meta) {
     if (!meta) return "";
     const verified = meta.verification_status === "verified";
-    const label = verified ? "проверено" : "требует сверки";
+    const rounded = meta.precision_kind === "rounded_0_1_mln_rub";
+    const label = rounded ? "≈ округлено; требует сверки" : metricEvidenceLabel(meta);
     const details = [meta.source_detail, meta.note].filter(Boolean).join(". ");
-    return `<span class="metric-verification" data-verification="${verified ? "verified" : "pending"}"${details ? ` title="${escapeHtml(details)}"` : ""}>${label}</span>`;
+    const sourceUrl = safeUrl(meta.source_detail);
+    const attributes = `class="metric-verification" data-verification="${verified ? "verified" : rounded ? "rounded" : "pending"}"${details ? ` title="${escapeHtml(details)}"` : ""}`;
+    return sourceUrl
+      ? `<a ${attributes} href="${escapeHtml(sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`
+      : `<span ${attributes}>${escapeHtml(label)}</span>`;
   }
 
   function metricChartsMarkup(metrics, catalog) {
@@ -910,9 +945,12 @@
         ? "1 год в базе"
         : `${points.length} ${points.length < 5 ? "года" : "лет"} в базе`;
       const verifiedCount = points.filter((point) => point.meta?.verification_status === "verified").length;
-      const periodLabel = verifiedCount
-        ? `${yearsLabel} · проверено ${verifiedCount}`
-        : `${yearsLabel} · требуется сверка`;
+      const pendingCount = points.length - verifiedCount;
+      const periodLabel = [
+        yearsLabel,
+        verifiedCount ? `проверено ${verifiedCount}` : "",
+        pendingCount ? `требуют сверки ${pendingCount}` : ""
+      ].filter(Boolean).join(" · ");
       return `
         <article class="metric-chart-panel">
           <header><div><h4>${escapeHtml(metric.title)}</h4><p>${escapeHtml(metric.category)} · ${periodLabel}</p></div></header>
@@ -1039,7 +1077,7 @@
     const enterprise = enterprisesById.get(Number(enterpriseId));
     if (!enterprise) return;
     const latestStaff = staffByEnterprise.get(enterprise.id);
-    const legacyStaff = latestStaff ? null : (metricsByEnterprise.get(enterprise.id) ?? [])
+    const legacyStaff = (latestStaff || Number(data.client_metadata?.schema_version) >= 7) ? null : (metricsByEnterprise.get(enterprise.id) ?? [])
       .filter((r) => r.employees !== null && r.employees !== undefined)
       .sort((a,b) => b.year - a.year)[0];
     const city = citiesById.get(enterprise.city_id);
@@ -1051,7 +1089,10 @@
     const qualityIssues = qualityIssuesByEnterprise.get(enterprise.id) ?? [];
     const sourceIds = getEnterpriseSourceIds(enterprise.id);
     const bfoReference = bfoReferenceByEnterprise.get(enterprise.id);
-    const prioritizedSources = [
+    const designatedSources = (sourceLinksByEnterprise.get(enterprise.id) ?? [])
+      .map((item) => sourcesById.get(item.source_id))
+      .filter(Boolean);
+    const fallbackSources = [
       ...(bfoReference ? [bfoReference] : []),
       ...(latestStaff ? [{
         name: "Среднесписочная численность (Firmoteka)",
@@ -1061,6 +1102,7 @@
       }] : []),
       ...[...sourceIds].map((id) => sourcesById.get(id)).filter(Boolean)
     ];
+    const prioritizedSources = designatedSources.length ? designatedSources : fallbackSources;
     const uniqueSourceUrls = new Set();
     const sources = prioritizedSources.filter((source) => {
       if (!source?.url || uniqueSourceUrls.has(source.url)) return false;
@@ -1106,7 +1148,7 @@
          ` : legacyStaff ? `
            <strong>Последняя численность в базе за ${legacyStaff.year} год: ${numberFormat.format(legacyStaff.employees)} чел.</strong>
            <span>Значение из прежнего набора; требуется дополнительная проверка.</span>
-         ` : `<span>Актуальные открытые сведения о численности сотрудников пока не найдены.</span>`}
+         ` : `<strong>Нет подтверждённых сведений</strong><span>Среднесписочная численность за отчётный год не опубликована в проверенном наборе.</span>`}
        </section>
 
       <section class="passport-section">

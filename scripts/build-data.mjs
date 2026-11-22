@@ -1038,3 +1038,7 @@ for (const table of [...baseTables, ...requiredTables]) {
 console.log(`enterprise_metric_view: ${data.enterprise_metric_view.length}`);
 console.log(`territory_metric_view: ${data.territory_metric_view.length}`);
 console.log(`release: ${data.client_metadata.release_code ?? "not specified"}`);
+
+// v7 is the canonical public selection. Apply it after every SQL rebuild so a
+// routine `node scripts/build-data.mjs` cannot restore the former 3-year set.
+await import("./apply_v7_dataset.mjs");
